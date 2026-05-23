@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Playfair+Display:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f7efdf;
+      --card: #fbf4e7;
+      --stroke: #ddc8a8;
+      --ink: #4b261e;
+      --ink-soft: rgba(75, 38, 30, 0.78);
+      --brand: #9f2323;
+      --green: #556f25;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Playfair Display", serif; background: var(--bg); color: var(--ink); }
+    .shell { min-height: 100vh; padding: 18px 18px 40px; }
+    .page { width: min(100%, 1248px); margin: 0 auto; }
+    .header { display:flex; justify-content:space-between; align-items:flex-start; gap:20px; margin-bottom:28px; }
+    .title { margin: 0; font-family: "Anton", sans-serif; font-size: clamp(2rem, 3.6vw, 3.35rem); line-height: 1; color: var(--ink); }
+    .subtitle { margin: 8px 0 0; color: var(--ink-soft); }
+    .barActions { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .button, .buttonOutline, .buttonGhost {
+      display:inline-flex; align-items:center; justify-content:center; min-height:52px; padding:0 24px;
+      border-radius:999px; border:1px solid #d7bf95; cursor:pointer; font:inherit; text-decoration:none;
+      font-size:.92rem; font-weight:700; letter-spacing:.2em; text-transform:uppercase;
+    }
+    .button { background: var(--green); border-color: var(--green); color:#fff; }
+    .buttonOutline { background:#fff8eb; color:#3f241f; }
+    .buttonGhost { border-color: transparent; background: transparent; text-transform:none; letter-spacing:0; font-weight:500; min-height:auto; padding:0 4px; color:var(--ink); }
+    .layout { display:grid; grid-template-columns: 244px minmax(0,1fr); gap: 32px; align-items:start; }
+    .sidebar { position: sticky; top: 18px; border: 1px solid var(--stroke); background: var(--card); border-radius: 18px; padding: 8px; }
+    .tabs { display:flex; flex-direction:column; gap:6px; }
+    .tab {
+      width:100%; border:0; border-radius:12px; text-align:left; cursor:pointer; font:inherit;
+      padding:14px 16px; background:transparent; color:#35211d; font-size:.98rem;
+    }
+    .tab:hover { background: rgba(161,33,33,.06); }
+    .tab.active { background: var(--brand); color:#fff; }
+    .panel { border:1px solid var(--stroke); border-radius:18px; background: var(--card); padding: 28px 30px; }
+    .panelTitle { margin:0; font-family: "Anton", sans-serif; font-size: clamp(1.8rem,2.6vw,2.4rem); font-weight:400; }
+    .panelDescription { margin: 12px 0 0; color: var(--ink-soft); line-height:1.6; }
+    .stack { display:grid; gap:22px; margin-top:18px; }
+    .sectionHeader { margin-bottom:14px; }
+    .sectionHeader h3 { margin:0; font-family:"Anton",sans-serif; font-size:1.45rem; font-weight:400; }
+    .sectionHeader p { margin:6px 0 0; color:var(--ink-soft); line-height:1.55; }
+    .grid2 { display:grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap:16px; }
+    .grid1 { display:grid; gap:16px; }
+    label { display:grid; gap:8px; font-size:.88rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase; color:#8b5a33; }
+    input, textarea {
+      width:100%; border:1px solid #e0c8a5; border-radius:14px; background:#f8f0de; color:#2f201c;
+      font:inherit; font-size:.97rem; text-transform:none; font-weight:400; padding:15px 17px;
+    }
+    textarea { min-height:112px; resize: vertical; }
+    .actionsInline { display:flex; gap:8px; flex-wrap:wrap; }
+    .smallButton, .smallOutline {
+      min-height:38px; padding:0 14px; border-radius:999px; border:1px solid #d7bf95;
+      font:inherit; font-size:.82rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; cursor:pointer;
+    }
+    .smallButton { background: var(--green); color:#fff; border-color: var(--green); }
+    .smallOutline { background:#fff8eb; color:#3f241f; }
+    .feedback { margin-top:14px; padding:12px 14px; border:1px solid #dfc39e; border-radius:14px; background: rgba(255,250,242,.92); }
+    .giftItemCard { border:1px solid #ddc8a8; border-radius:16px; padding:14px; background:#fff8eb; }
+    .giftMeta { color: var(--ink-soft); font-size:.88rem; }
+    .hidden { display:none !important; }
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; }
+    }
+    @media (max-width: 700px) {
+      .grid2 { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="page">
+      <header class="header">
+        <div>
+          <h1 class="title">Wedding Admin Dashboard</h1>
+          <p class="subtitle">Manage invitation content and countdown settings.</p>
+        </div>
+        <div class="barActions">
+          <button id="saveAll" class="button" type="button">Save Changes</button>
+          <button id="resetAll" class="buttonOutline" type="button">Reset Default</button>
+          <a class="buttonGhost" href="index.html" target="_blank" rel="noopener">Open Main Page</a>
+        </div>
+      </header>
+
+      <div class="layout">
+        <aside class="sidebar">
+          <nav class="tabs" aria-label="Admin Tabs">
+            <button class="tab active" data-tab="couple" type="button">Couple</button>
+            <button class="tab" data-tab="story" type="button">Our Story</button>
+            <button class="tab" data-tab="program" type="button">Program</button>
+            <button class="tab" data-tab="gift" type="button">Gifts</button>
+            <button class="tab" data-tab="event" type="button">Event</button>
+            <button class="tab" data-tab="travel" type="button">Travel</button>
+            <button class="tab" data-tab="rsvp" type="button">RSVP</button>
+            <button class="tab" data-tab="settings" type="button">Settings</button>
+          </nav>
+        </aside>
+
+        <main class="main">
+          <section class="panel" data-panel="couple">
+            <h2 class="panelTitle">Couple Section</h2>
+            <p class="panelDescription">Hero copy and names.</p>
+            <div class="stack">
+              <div>
+                <div class="sectionHeader"><h3>Intro Content</h3></div>
+                <div class="grid2">
+                  <label>Intro Kicker<input id="introKicker" value="THE WEDDING OF" /></label>
+                  <label>Save Date Title<input id="saveDateTitle" value="Save The Date" /></label>
+                  <label>Left Name<input id="nameLeft" value="HAQIM" /></label>
+                  <label>Right Name<input id="nameRight" value="MYRA" /></label>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel hidden" data-panel="program">
+            <h2 class="panelTitle">Program & Countdown</h2>
+            <p class="panelDescription">Control countdown heading and wedding datetime.</p>
+            <div class="stack">
+              <div>
+                <div class="sectionHeader"><h3>Countdown</h3></div>
+                <div class="grid2">
+                  <label>Line 1<input id="countdownLine1" value="Counting days before" /></label>
+                  <label>Line 2<input id="countdownLine2" value="the take off" /></label>
+                </div>
+                <div class="grid1" style="margin-top:16px">
+                  <label>Wedding DateTime ISO (+08:00)<input id="weddingDateTimeISO" value="2026-06-20T11:30:00+08:00" /></label>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel hidden" data-panel="story">
+            <h2 class="panelTitle">Our Story</h2>
+            <p class="panelDescription">Shape the storytelling flow with timeline entries.</p>
+            <div class="stack">
+              <div class="sectionHeader actionsInline" style="justify-content:space-between">
+                <div>
+                  <h3>Love Story Timeline</h3>
+                  <p>Build the relationship story step by step for the timeline section.</p>
+                </div>
+                <button id="addStoryStep" class="smallOutline" type="button">Add Step</button>
+              </div>
+              <div id="storySteps" class="grid1"></div>
+            </div>
+          </section>
+
+          <section class="panel hidden" data-panel="rsvp">
+            <h2 class="panelTitle">RSVP Section</h2>
+            <p class="panelDescription">RSVP copy used on main page section.</p>
+            <div class="stack">
+              <div class="grid1">
+                <label>RSVP Line 1<input id="rsvpLine1" value="Kindly RSVP by May 23rd, 2026" /></label>
+                <label>RSVP Line 2<input id="rsvpLine2" value="to help us with the final arrangements" /></label>
+                <label>RSVP Line 3<input id="rsvpLine3" value="for our special day." /></label>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel hidden" data-panel="gift">
+            <h2 class="panelTitle">Gifts</h2>
+            <p class="panelDescription">Control E-Kaut and Gift List popup copy.</p>
+            <div class="stack">
+              <div>
+                <div class="sectionHeader">
+                  <h3>E-Kaut Popup</h3>
+                  <p>Main heading and helper sentence for contribution popup.</p>
+                </div>
+                <div class="grid1">
+                  <label>E-Kaut Title
+                    <input id="ekautTitle" value="Share your blessings" />
+                  </label>
+                  <label>E-Kaut Description
+                    <textarea id="ekautDescription">All payments are made through Billplz. Your phone number is required to generate the bill, and your kind wishes will be shared alongside your gift!</textarea>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <div class="sectionHeader">
+                  <h3>Gift List Popup</h3>
+                  <p>Heading and repeated contributor card labels.</p>
+                </div>
+                <div class="grid2">
+                  <label>Gift Popup Title
+                    <input id="giftPopupTitle" value="Gift List" />
+                  </label>
+                  <label>Contributor Label
+                    <input id="giftContributorLabel" value="Contributors Name" />
+                  </label>
+                  <label>Primary Button Text
+                    <input id="giftPrimaryButtonText" value="Button 1" />
+                  </label>
+                  <label>Chip Label
+                    <input id="giftChipLabel" value="Name" />
+                  </label>
+                </div>
+              </div>
+              <div>
+                <div class="sectionHeader actionsInline" style="justify-content:space-between;align-items:center">
+                  <div>
+                    <h3>Gift Items</h3>
+                    <p>Manage product cards used by Gift List popup.</p>
+                  </div>
+                  <button id="addGiftItem" class="smallOutline" type="button">Add Item</button>
+                </div>
+                <div id="giftItemsMeta" class="giftMeta">Source: -</div>
+                <div id="giftItems" class="grid1" style="margin-top:10px"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel hidden" data-panel="event">
+            <h2 class="panelTitle">Event</h2>
+            <p class="panelDescription">Update venue information, map links, contact cards, and soundtrack details.</p>
+            <div class="stack">
+              <div>
+                <div class="sectionHeader">
+                  <h3>Location &amp; Map</h3>
+                  <p>Control the venue title, address, map preview, and navigation buttons.</p>
+                </div>
+                <div class="grid1">
+                  <label>Venue Name
+                    <input id="venueName" value="Bizmilla Ariz Hall" />
+                  </label>
+                  <label>Venue Address
+                    <textarea id="venueAddress">Level UG, 02,
+Jalan Alamanda, Presint 1,
+62000 Putrajaya,
+Wilayah Persekutuan Putrajaya</textarea>
+                  </label>
+                  <label>Google Maps Embed URL
+                    <input id="googleMapsEmbedUrl" value="https://www.google.com/maps?q=Bizmilla%20Ariz%20Hall%20Putrajaya" />
+                  </label>
+                  <label>Google Maps Button URL
+                    <input id="googleMapsButtonUrl" value="https://maps.google.com/?q=Bizmilla%20Ariz%20Hall%20Putrajaya" />
+                  </label>
+                  <label>Waze Button URL
+                    <input id="wazeButtonUrl" value="https://waze.com/ul?q=Bizmilla%20Ariz%20Hall%20Putrajaya" />
+                  </label>
+                </div>
+              </div>
+              <div>
+                <div class="sectionHeader">
+                  <h3>Contact &amp; Assistance</h3>
+                  <p>Message shown in contact section on main page.</p>
+                </div>
+                <div class="grid1">
+                  <label>Contact Message
+                    <textarea id="contactMessage">Should you require any assistance with the location or have any inquiries regarding the wedding, our family members will be delighted to assist you.</textarea>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel hidden" data-panel="travel">
+            <h2 class="panelTitle">Travel</h2>
+            <p class="panelDescription">Manage destination route section content.</p>
+            <div class="stack">
+              <div class="sectionHeader">
+                <h3>Route Section</h3>
+                <p>Title and address lines for the travel section card.</p>
+              </div>
+              <div class="grid2">
+                <label>Route Section Title
+                  <input id="routeTitle" value="Destination Route" />
+                </label>
+                <label>Venue Display Name
+                  <input id="routeVenueName" value="Bizmilla Ariz Hall" />
+                </label>
+              </div>
+              <div class="grid1">
+                <label>Route Address (Multi-line)
+                  <textarea id="routeAddress">Level UG, 02,
+Jalan Alamanda, Presint 1,
+62000 Putrajaya,
+Wilayah Persekutuan Putrajaya</textarea>
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel hidden" data-panel="settings">
+            <h2 class="panelTitle">Settings</h2>
+            <p class="panelDescription">Save or clear local admin settings.</p>
+            <div class="actionsInline">
+              <button id="saveSettingsSecondary" class="smallButton" type="button">Save</button>
+              <button id="clearSettingsSecondary" class="smallOutline" type="button">Clear Saved</button>
+            </div>
+            <div id="feedback" class="feedback hidden"></div>
+          </section>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var PROJECT_KEY = 'haqim-myra-2026';
+      var API_BASE = window.WC_API_BASE || (window.location.protocol + '//' + window.location.hostname + ':8787');
+      var tabs = document.querySelectorAll('.tab');
+      var panels = document.querySelectorAll('[data-panel]');
+      var feedback = document.getElementById('feedback');
+
+      function showPanel(tabId) {
+        for (var i = 0; i < tabs.length; i += 1) {
+          tabs[i].classList.toggle('active', tabs[i].getAttribute('data-tab') === tabId);
+        }
+        for (var j = 0; j < panels.length; j += 1) {
+          panels[j].classList.toggle('hidden', panels[j].getAttribute('data-panel') !== tabId);
+        }
+      }
+
+      for (var i = 0; i < tabs.length; i += 1) {
+        tabs[i].addEventListener('click', function (e) {
+          showPanel(e.currentTarget.getAttribute('data-tab'));
+        });
+      }
+
+      var ids = [
+        'introKicker','saveDateTitle','nameLeft','nameRight',
+        'countdownLine1','countdownLine2','weddingDateTimeISO',
+        'rsvpLine1','rsvpLine2','rsvpLine3',
+        'ekautTitle','ekautDescription','giftPopupTitle','giftContributorLabel','giftPrimaryButtonText','giftChipLabel',
+        'venueName','venueAddress','googleMapsEmbedUrl','googleMapsButtonUrl','wazeButtonUrl','contactMessage',
+        'routeTitle','routeVenueName','routeAddress'
+      ];
+      var storyStepsContainer = document.getElementById('storySteps');
+      var addStoryStepBtn = document.getElementById('addStoryStep');
+      var giftItemsContainer = document.getElementById('giftItems');
+      var giftItemsMeta = document.getElementById('giftItemsMeta');
+      var addGiftItemBtn = document.getElementById('addGiftItem');
+      var storySteps = [
+        {
+          title: 'How We Met',
+          date: 'July 2018',
+          description: 'We first met as classmates during our Diploma years. What started as a simple introduction slowly grew into something special.'
+        },
+        {
+          title: 'Our First Date',
+          date: 'July 2018',
+          description: 'Our first date was simple but unforgettable. We shared snacks, talked for hours, and made our first memory together.'
+        },
+        {
+          title: 'Our Big Day',
+          date: '2026',
+          description: 'After years of growing side by side, we are ready to begin our new chapter together with all of you.'
+        }
+      ];
+      var giftSource = 'gift_items';
+      var giftItems = [];
+
+      function renderStorySteps() {
+        if (!storyStepsContainer) return;
+        storyStepsContainer.innerHTML = '';
+        for (var n = 0; n < storySteps.length; n += 1) {
+          var step = storySteps[n];
+          var card = document.createElement('div');
+          card.className = 'grid1';
+          card.style.border = '1px solid #ddc8a8';
+          card.style.borderRadius = '16px';
+          card.style.padding = '14px';
+          card.innerHTML =
+            '<div class="actionsInline" style="justify-content:space-between;align-items:center">' +
+              '<strong>' + (step.title || ('Story ' + (n + 1))) + '</strong>' +
+              '<div class="actionsInline">' +
+                '<button class="smallOutline" type="button" data-story-up="' + n + '">Up</button>' +
+                '<button class="smallOutline" type="button" data-story-down="' + n + '">Down</button>' +
+                '<button class="smallOutline" type="button" data-story-remove="' + n + '">Remove</button>' +
+              '</div>' +
+            '</div>' +
+            '<label>Title<input data-story-title="' + n + '" value="' + (step.title || '').replace(/"/g, '&quot;') + '" /></label>' +
+            '<label>Date Label<input data-story-date="' + n + '" value="' + (step.date || '').replace(/"/g, '&quot;') + '" /></label>' +
+            '<label>Description<textarea data-story-desc="' + n + '">' + (step.description || '') + '</textarea></label>';
+          storyStepsContainer.appendChild(card);
+        }
+      }
+
+      function readStoryStepsFromUi() {
+        if (!storyStepsContainer) return;
+        var next = [];
+        for (var n = 0; n < storySteps.length; n += 1) {
+          var titleInput = storyStepsContainer.querySelector('[data-story-title="' + n + '"]');
+          var dateInput = storyStepsContainer.querySelector('[data-story-date="' + n + '"]');
+          var descInput = storyStepsContainer.querySelector('[data-story-desc="' + n + '"]');
+          next.push({
+            title: titleInput ? titleInput.value.trim() : '',
+            date: dateInput ? dateInput.value.trim() : '',
+            description: descInput ? descInput.value.trim() : ''
+          });
+        }
+        storySteps = next;
+      }
+
+      function renderGiftItems() {
+        if (!giftItemsContainer) return;
+        giftItemsContainer.innerHTML = '';
+        if (giftItemsMeta) giftItemsMeta.textContent = 'Source: ' + giftSource;
+        for (var i = 0; i < giftItems.length; i += 1) {
+          var item = giftItems[i];
+          var card = document.createElement('div');
+          card.className = 'giftItemCard grid1';
+          card.innerHTML =
+            '<div class="actionsInline" style="justify-content:space-between;align-items:center">' +
+              '<strong>' + ((item.title || 'Gift Item').replace(/</g, '&lt;')) + '</strong>' +
+              '<div class="actionsInline">' +
+                '<button class="smallOutline" type="button" data-gift-up="' + i + '">Up</button>' +
+                '<button class="smallOutline" type="button" data-gift-down="' + i + '">Down</button>' +
+                '<button class="smallOutline" type="button" data-gift-remove="' + i + '">Remove</button>' +
+              '</div>' +
+            '</div>' +
+            '<div class="grid2">' +
+              '<label>Title<input data-gift-title="' + i + '" value="' + (item.title || '').replace(/"/g, '&quot;') + '" /></label>' +
+              '<label>Status<input data-gift-status="' + i + '" value="' + (item.status || 'available').replace(/"/g, '&quot;') + '" /></label>' +
+              '<label>Image URL<input data-gift-image="' + i + '" value="' + (item.imageUrl || '').replace(/"/g, '&quot;') + '" /></label>' +
+              '<label>Product URL<input data-gift-product="' + i + '" value="' + (item.productUrl || '').replace(/"/g, '&quot;') + '" /></label>' +
+              '<label>Target Amount<input type="number" min="0" step="0.01" data-gift-target="' + i + '" value="' + Number(item.targetAmount || 0) + '" /></label>' +
+              '<label>Funded Amount<input type="number" min="0" step="0.01" data-gift-funded="' + i + '" value="' + Number(item.fundedAmount || 0) + '" /></label>' +
+            '</div>' +
+            '<label>Description<textarea data-gift-desc="' + i + '">' + (item.description || '') + '</textarea></label>';
+          giftItemsContainer.appendChild(card);
+        }
+      }
+
+      function readGiftItemsFromUi() {
+        if (!giftItemsContainer) return;
+        var next = [];
+        for (var i = 0; i < giftItems.length; i += 1) {
+          var base = giftItems[i] || {};
+          var titleInput = giftItemsContainer.querySelector('[data-gift-title="' + i + '"]');
+          var statusInput = giftItemsContainer.querySelector('[data-gift-status="' + i + '"]');
+          var imageInput = giftItemsContainer.querySelector('[data-gift-image="' + i + '"]');
+          var productInput = giftItemsContainer.querySelector('[data-gift-product="' + i + '"]');
+          var targetInput = giftItemsContainer.querySelector('[data-gift-target="' + i + '"]');
+          var fundedInput = giftItemsContainer.querySelector('[data-gift-funded="' + i + '"]');
+          var descInput = giftItemsContainer.querySelector('[data-gift-desc="' + i + '"]');
+          next.push({
+            id: base.id || '',
+            title: titleInput ? titleInput.value.trim() : '',
+            status: statusInput ? statusInput.value.trim() : 'available',
+            imageUrl: imageInput ? imageInput.value.trim() : '',
+            productUrl: productInput ? productInput.value.trim() : '',
+            targetAmount: targetInput ? Number(targetInput.value || 0) : 0,
+            fundedAmount: fundedInput ? Number(fundedInput.value || 0) : 0,
+            description: descInput ? descInput.value.trim() : ''
+          });
+        }
+        giftItems = next.filter(function (item) { return item.title; });
+      }
+
+      function collect() {
+        readStoryStepsFromUi();
+        readGiftItemsFromUi();
+        var o = {};
+        for (var k = 0; k < ids.length; k += 1) o[ids[k]] = document.getElementById(ids[k]).value.trim();
+        o.storySteps = storySteps;
+        o.storyTitle1 = storySteps[0] ? storySteps[0].title : '';
+        o.storyDate1 = storySteps[0] ? storySteps[0].date : '';
+        o.storyDesc1 = storySteps[0] ? storySteps[0].description : '';
+        o.storyTitle2 = storySteps[1] ? storySteps[1].title : '';
+        o.storyDate2 = storySteps[1] ? storySteps[1].date : '';
+        o.storyDesc2 = storySteps[1] ? storySteps[1].description : '';
+        o.storyTitle3 = storySteps[2] ? storySteps[2].title : '';
+        o.storyDate3 = storySteps[2] ? storySteps[2].date : '';
+        o.storyDesc3 = storySteps[2] ? storySteps[2].description : '';
+        o.giftItems = giftItems;
+        o.giftSource = giftSource;
+        return o;
+      }
+
+      function apply(data) {
+        for (var k = 0; k < ids.length; k += 1) {
+          if (Object.prototype.hasOwnProperty.call(data, ids[k])) {
+            document.getElementById(ids[k]).value = data[ids[k]];
+          }
+        }
+        if (Array.isArray(data.storySteps) && data.storySteps.length) {
+          storySteps = data.storySteps;
+        } else if (data.storyTitle1 || data.storyDate1 || data.storyDesc1) {
+          storySteps = [
+            { title: data.storyTitle1 || 'How We Met', date: data.storyDate1 || 'July 2018', description: data.storyDesc1 || '' },
+            { title: data.storyTitle2 || 'Our First Date', date: data.storyDate2 || 'July 2018', description: data.storyDesc2 || '' },
+            { title: data.storyTitle3 || 'Our Big Day', date: data.storyDate3 || '2026', description: data.storyDesc3 || '' }
+          ];
+        }
+        if (Array.isArray(data.giftItems)) {
+          giftItems = data.giftItems;
+        }
+        if (typeof data.giftSource === 'string' && data.giftSource) {
+          giftSource = data.giftSource;
+        }
+        renderStorySteps();
+        renderGiftItems();
+      }
+
+      function notify(message) {
+        feedback.textContent = message;
+        feedback.classList.remove('hidden');
+      }
+
+      async function fetchRemoteSettings() {
+        var response = await fetch(API_BASE + '/api/settings/' + encodeURIComponent(PROJECT_KEY));
+        if (!response.ok) throw new Error('Remote settings not available');
+        var data = await response.json();
+        return data && data.settings ? data.settings : {};
+      }
+
+      async function saveRemoteSettings(settingsObj) {
+        var response = await fetch(API_BASE + '/api/settings/' + encodeURIComponent(PROJECT_KEY), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ settings: settingsObj, is_published: true })
+        });
+        if (!response.ok) throw new Error('Remote save failed');
+      }
+
+      async function fetchGiftItems() {
+        var response = await fetch(API_BASE + '/api/admin/gift-items/' + encodeURIComponent(PROJECT_KEY));
+        if (!response.ok) throw new Error('Gift items fetch failed');
+        return response.json();
+      }
+
+      async function saveGiftItems() {
+        var response = await fetch(API_BASE + '/api/admin/gift-items/' + encodeURIComponent(PROJECT_KEY), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ source: giftSource, items: giftItems })
+        });
+        if (!response.ok) throw new Error('Gift items save failed');
+      }
+
+      var saved = localStorage.getItem('weddingCardSettings');
+      if (saved) {
+        try { apply(JSON.parse(saved)); } catch (e) {}
+      }
+      fetchRemoteSettings().then(function (remote) {
+        if (remote && typeof remote === 'object') {
+          apply(remote);
+          notify('Loaded settings from database.');
+        }
+      }).catch(function () {});
+      fetchGiftItems().then(function (payload) {
+        if (payload && Array.isArray(payload.items)) {
+          giftItems = payload.items;
+        }
+        if (payload && payload.source) {
+          giftSource = payload.source;
+        }
+        renderGiftItems();
+      }).catch(function () {
+        renderGiftItems();
+      });
+      renderStorySteps();
+
+      if (addStoryStepBtn) {
+        addStoryStepBtn.addEventListener('click', function () {
+          readStoryStepsFromUi();
+          storySteps.push({ title: 'New Chapter', date: 'Month Year', description: 'Add the story for this milestone.' });
+          renderStorySteps();
+        });
+      }
+
+      if (storyStepsContainer) {
+        storyStepsContainer.addEventListener('click', function (e) {
+          var target = e.target;
+          if (!(target instanceof HTMLElement)) return;
+          var up = target.getAttribute('data-story-up');
+          var down = target.getAttribute('data-story-down');
+          var remove = target.getAttribute('data-story-remove');
+          if (up === null && down === null && remove === null) return;
+          readStoryStepsFromUi();
+          if (up !== null) {
+            var upIndex = Number(up);
+            if (upIndex > 0) {
+              var upTemp = storySteps[upIndex - 1];
+              storySteps[upIndex - 1] = storySteps[upIndex];
+              storySteps[upIndex] = upTemp;
+            }
+          }
+          if (down !== null) {
+            var downIndex = Number(down);
+            if (downIndex < storySteps.length - 1) {
+              var downTemp = storySteps[downIndex + 1];
+              storySteps[downIndex + 1] = storySteps[downIndex];
+              storySteps[downIndex] = downTemp;
+            }
+          }
+          if (remove !== null) {
+            var removeIndex = Number(remove);
+            storySteps = storySteps.filter(function (_, i) { return i !== removeIndex; });
+          }
+          renderStorySteps();
+        });
+      }
+
+      if (addGiftItemBtn) {
+        addGiftItemBtn.addEventListener('click', function () {
+          readGiftItemsFromUi();
+          giftItems.push({
+            id: '',
+            title: 'New Gift Item',
+            status: 'available',
+            imageUrl: '',
+            productUrl: '',
+            targetAmount: 0,
+            fundedAmount: 0,
+            description: ''
+          });
+          renderGiftItems();
+        });
+      }
+
+      if (giftItemsContainer) {
+        giftItemsContainer.addEventListener('click', function (e) {
+          var target = e.target;
+          if (!(target instanceof HTMLElement)) return;
+          var up = target.getAttribute('data-gift-up');
+          var down = target.getAttribute('data-gift-down');
+          var remove = target.getAttribute('data-gift-remove');
+          if (up === null && down === null && remove === null) return;
+          readGiftItemsFromUi();
+          if (up !== null) {
+            var upIndex = Number(up);
+            if (upIndex > 0) {
+              var upTemp = giftItems[upIndex - 1];
+              giftItems[upIndex - 1] = giftItems[upIndex];
+              giftItems[upIndex] = upTemp;
+            }
+          }
+          if (down !== null) {
+            var downIndex = Number(down);
+            if (downIndex < giftItems.length - 1) {
+              var downTemp = giftItems[downIndex + 1];
+              giftItems[downIndex + 1] = giftItems[downIndex];
+              giftItems[downIndex] = downTemp;
+            }
+          }
+          if (remove !== null) {
+            var removeIndex = Number(remove);
+            giftItems = giftItems.filter(function (_, i) { return i !== removeIndex; });
+          }
+          renderGiftItems();
+        });
+      }
+
+      async function saveAll() {
+        var payload = collect();
+        localStorage.setItem('weddingCardSettings', JSON.stringify(payload));
+        try {
+          await saveRemoteSettings(payload);
+          await saveGiftItems();
+          notify('Saved to database and local cache. Refresh index.html to view updates.');
+        } catch (e) {
+          notify('Saved locally only (database unavailable).');
+        }
+      }
+
+      document.getElementById('saveAll').addEventListener('click', saveAll);
+      document.getElementById('saveSettingsSecondary').addEventListener('click', saveAll);
+
+      function clearAll() {
+        localStorage.removeItem('weddingCardSettings');
+        location.reload();
+      }
+
+      document.getElementById('resetAll').addEventListener('click', clearAll);
+      document.getElementById('clearSettingsSecondary').addEventListener('click', clearAll);
+    })();
+  </script>
+</body>
+</html>

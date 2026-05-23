@@ -1,0 +1,108 @@
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "model": "afiqstoreapi/deepseek-v4-pro",
+  "small_model": "afiqstoreapi/glm-5",
+  "enabled_providers": ["afiqstoreapi"],
+  "disabled_providers": [],
+  "provider": {
+    "afiqstoreapi": {
+      "name": "Afiq Store API",
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "https://api.afiqstoreapi.cloud/v1",
+        "apiKey": "{env:AFIQSTORE_API_KEY}"
+      },
+      "models": {
+        "deepseek-v4-pro": {
+          "id": "deepseek-v4-pro",
+          "name": "Deepseek V4 Pro",
+          "tool_call": true,
+          "limit": {
+            "context": 1048576,
+            "output": 16384
+          }
+        },
+        "qwen3p6-plus": {
+          "id": "qwen3p6-plus",
+          "name": "Qwen 3.6 Plus",
+          "tool_call": true,
+          "attachment": true,
+          "modalities": {
+            "input": ["text", "image"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
+          }
+        },
+        "kimi-k2p6": {
+          "id": "kimi-k2p6",
+          "name": "Kimi K2 P6",
+          "tool_call": true,
+          "attachment": true,
+          "modalities": {
+            "input": ["text", "image"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 16384
+          }
+        },
+        "kimi-k2p5": {
+          "id": "kimi-k2p5",
+          "name": "Kimi K2 P5",
+          "tool_call": true,
+          "attachment": true,
+          "modalities": {
+            "input": ["text", "image"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 16384
+          }
+        },
+        "glm-5p1": {
+          "id": "glm-5p1",
+          "name": "GLM 5.1",
+          "tool_call": true,
+          "limit": {
+            "context": 202752,
+            "output": 16384
+          }
+        },
+        "glm-5": {
+          "id": "glm-5",
+          "name": "GLM 5",
+          "tool_call": true,
+          "limit": {
+            "context": 202752,
+            "output": 16384
+          }
+        },
+        "minimax-m2p7": {
+          "id": "minimax-m2p7",
+          "name": "Minimax M2 P7",
+          "tool_call": true,
+          "limit": {
+            "context": 196608,
+            "output": 16384
+          }
+        }
+      }
+    }
+  },
+  "permission": {
+    "bash": "allow"
+  },
+  "mcp": {
+    "Figma Desktop": {
+      "type": "remote",
+      "url": "http://127.0.0.1:3845/mcp",
+      "enabled": true,
+      "timeout": 60000
+    }
+  }
+}

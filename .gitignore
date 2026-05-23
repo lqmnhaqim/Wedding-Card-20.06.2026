@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Environment secrets
+.env
+!.env.example
+
+# Vercel
+.vercel/
+
+# Next.js build output
+next-migration/.next/
+next-migration/out/
+
+# Database SQLite
+database/
+
+# OS files
+.DS_Store
+Thumbs.db
