@@ -20,10 +20,11 @@ const supabase =
     ? createClient(supabaseUrl, supabaseServiceRoleKey, { auth: { persistSession: false } })
     : null;
 
-const billplzBaseUrl =
-  process.env.BILLPLZ_SANDBOX === "true"
-    ? "https://www.billplz-sandbox.com/api"
-    : "https://www.billplz.com/api";
+const rawSandbox = String(process.env.BILLPLZ_SANDBOX || "true").trim();
+const isSandbox = rawSandbox === "true" || rawSandbox == "'true'" || rawSandbox == '"true"';
+const billplzBaseUrl = isSandbox
+  ? "https://www.billplz-sandbox.com/api"
+  : "https://www.billplz.com/api";
 const telegramEnabled = process.env.TELEGRAM_ENABLED !== "false";
 
 function requireDb(res) {
@@ -208,21 +209,27 @@ async function getBillplzBillTransactions(billId) {
 }
 
 function verifyBillplzSignature(fields) {
-  const xSignatureKey = process.env.BILLPLZ_X_SIGNATURE_KEY?.trim();
-  if (!xSignatureKey) return true; // allow callbacks if signature key is not configured yet
+  const rawKey = String(process.env.BILLPLZ_X_SIGNATURE_KEY || "").trim();
+  const xSignatureKey = rawKey.replace(/^["']|["']$/g, "");
+  if (!xSignatureKey) return true;
   const providedSignature = String(fields.x_signature || "").trim().toLowerCase();
   if (!providedSignature || !/^[a-f0-9]{64}$/.test(providedSignature)) return false;
 
   const source = Object.entries(fields)
     .filter(([key]) => key !== "x_signature")
-    .map(([key, value]) => `${key}${value ?? ""}`)
-    .join("");
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, value]) => value ?? "")
+    .join("|");
 
-  const computed = crypto.createHmac("sha256", xSignatureKey).update(source).digest("hex");
-  const a = Buffer.from(computed, "hex");
-  const b = Buffer.from(providedSignature, "hex");
-  if (a.length !== b.length) return false;
-  return crypto.timingSafeEqual(a, b);
+  const computed = crypto.createHmac("sha256", xSignatureKey).update(source).digest("hex").toLowerCase();
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(computed, "hex"),
+      Buffer.from(providedSignature, "hex")
+    );
+  } catch {
+    return false;
+  }
 }
 
 function normalizeBillplzMobile(input) {
@@ -420,21 +427,6 @@ app.post("/api/contributions/webhook", express.text({ type: "*/*" }), async (req
   return contributionWebhook(req, res);
 });
 
-app.get("/api/contributions/status/:id", async (req, res) => {
-  try {
-    if (!supabase) return res.status(500).json({ error: "Database unavailable." });
-    const { data, error } = await supabase
-      .from("gift_contributions")
-      .select("id,status,payment_reference")
-      .eq("id", req.params.id)
-      .single();
-    if (error || !data) return res.status(404).json({ error: "Not found." });
-    return res.json(data);
-  } catch (e) {
-    return res.status(500).json({ error: "Status check failed." });
-  }
-});
-
 app.get("/admin", (_req, res) => {
   res.sendFile(path.join(__dirname, "admin.html"));
 });
@@ -521,7 +513,7 @@ app.post("/api/contributions/:projectKey/checkout", async (req, res) => {
       contributionId,
       billId: bill.billId,
       paymentUrl: bill.paymentUrl,
-      mode: process.env.BILLPLZ_SANDBOX === "true" ? "sandbox" : "live",
+      mode: isSandbox ? "sandbox" : "live",
       mock: Boolean(bill.isMock),
     });
   } catch (error) {
@@ -570,10 +562,10 @@ app.post("/api/contributions/:projectKey/billplz-callback", express.urlencoded({
   }
 });
 
-app.get("/api/contributions/status/:contributionId", async (req, res) => {
+app.get("/api/contributions/status/:id", async (req, res) => {
   try {
     if (!requireDb(res)) return;
-    const id = String(req.params.contributionId || "").trim();
+    const id = String(req.params.id || "").trim();
     if (!id) return res.status(400).json({ error: "Missing contribution id." });
     const contribution = await syncContributionWithBillplz(id);
     if (!contribution) return res.status(404).json({ error: "Contribution not found." });

@@ -1,12 +1,14 @@
 import crypto from "node:crypto";
 
-const billplzBaseUrl =
-  process.env.BILLPLZ_SANDBOX === "true"
-    ? "https://www.billplz-sandbox.com/api"
-    : "https://www.billplz.com/api";
+const rawSandbox = process.env.BILLPLZ_SANDBOX?.trim();
+const isSandbox = rawSandbox === "true" || rawSandbox === true || rawSandbox === "'true'" || rawSandbox === '"true"';
+
+const billplzBaseUrl = isSandbox
+  ? "https://www.billplz-sandbox.com/api"
+  : "https://www.billplz.com/api";
 
 export function getBillplzMode() {
-  return process.env.BILLPLZ_SANDBOX === "true" ? "sandbox" : "live";
+  return isSandbox ? "sandbox" : "live";
 }
 
 function getBillplzAuthHeader(apiKey) {
@@ -82,7 +84,8 @@ export async function getBillplzBillTransactions(billId) {
 }
 
 export function verifyBillplzCallbackSignature(fields) {
-  const xSignatureKey = process.env.BILLPLZ_X_SIGNATURE_KEY?.trim();
+  const rawKey = process.env.BILLPLZ_X_SIGNATURE_KEY?.trim();
+  const xSignatureKey = rawKey?.replace(/^["']|["']$/g, "");
   if (!xSignatureKey) return false;
 
   const providedSignature = fields.x_signature?.trim();
