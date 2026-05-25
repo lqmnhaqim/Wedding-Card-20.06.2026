@@ -73,7 +73,7 @@ body { background: var(--blue); color: var(--text); }
 .figma-exact-love-snow__flake {
   position: absolute;
   left: var(--love-left);
-  top: -12vh;
+  top: var(--love-top, -10vh);
   display: block;
   font-size: calc(var(--love-size) * 1.65);
   line-height: 1;
@@ -620,6 +620,7 @@ body.modal-open #hudModal * {
   color: var(--blue);
   font: 400 36px/54px "Anton", sans-serif;
   letter-spacing: 0;
+  white-space: nowrap;
 }
 .name-left,
 .name-right {
@@ -785,12 +786,13 @@ body.modal-open #hudModal * {
   left: 50%;
   transform: translateX(-50%);
   top: 80px;
-  width: 376px;
+  width: 820px;
   height: 102px;
-  font-size: 68px;
+  font-size: 62px;
   line-height: 102px;
   color: #121D6C;
   z-index: 3;
+  white-space: nowrap;
 }
 .digits-row {
   position: absolute;
@@ -822,10 +824,11 @@ body.modal-open #hudModal * {
   left: 50%;
   transform: translateX(-50%);
   top: 535px;
-  width: 908px;
-  font: 400 68px/102px "Anton", sans-serif;
+  width: 1260px;
+  font: 400 60px/102px "Anton", sans-serif;
   color: #121D6C;
   z-index: 3;
+  white-space: nowrap;
 }
 .sub-digits {
   top: 677px;
@@ -1232,7 +1235,66 @@ body.modal-open #hudModal * {
   height: 100%;
   object-fit: contain;
 }
+
+.invitation-language-toggle {
+  position: fixed;
+  top: max(16px, calc(env(safe-area-inset-top, 0px) + 12px));
+  right: 16px;
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid rgba(111, 132, 102, 0.52);
+  border-radius: 999px;
+  background: rgba(245, 240, 228, 0.96);
+  color: #1b2793;
+  font-family: "Mina", "Arial Narrow", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: 0;
+  cursor: pointer;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 10px 30px rgba(27, 39, 147, 0.12);
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.invitation-language-toggle:hover,
+.invitation-language-toggle:focus-visible {
+  border-color: #6f8466;
+  box-shadow: 0 12px 32px rgba(27, 39, 147, 0.18);
+  outline: 2px solid #6f8466;
+  outline-offset: 2px;
+}
+
+.invitation-language-toggle:active {
+  transform: translateY(1px);
+}
+
+.invitation-language-toggle svg {
+  flex: 0 0 auto;
+  color: #6f8466;
+}
+
+.invitation-language-toggle span {
+  display: inline-block;
+  min-width: 22px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .invitation-language-toggle {
+    top: 12px;
+    right: 12px;
+    min-height: 34px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+}
 .gift-ticket-bg-mobile { display: none; }
+.gift-passport-mobile { display: none; }
 .gift-doodle-mobile { display: none; }
 .gift-ticket h3 {
   position: absolute;
@@ -1376,6 +1438,11 @@ body.modal-open #hudModal * {
   width: 514px;
   height: 763px;
   border-right: 1px solid #1b267e;
+  opacity: 1;
+  transition: opacity 220ms ease;
+}
+.wishes-left.wishes-left--fade {
+  opacity: 0.15;
 }
 .wish-card {
   position: absolute;
@@ -1396,6 +1463,10 @@ body.modal-open #hudModal * {
   margin: 0;
   font: 400 48px/1 "Anton", sans-serif;
   color: #1b267e;
+  width: calc(100% - 32px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .wish-card p {
   position: absolute;
@@ -1563,8 +1634,11 @@ body.modal-open #hudModal * {
     left: 50%;
     transform: translateX(-50%);
   }
-  .attire-doodle {
-    display: none;
+  .attire-doodle--1 {
+    display: block;
+    left: 16px;
+    width: 300px;
+    height: auto;
   }
 }
 @media (max-width: 768px) {
@@ -1590,10 +1664,10 @@ body.modal-open #hudModal * {
     justify-content: center;
     gap: 24px;
     width: min(calc(100vw - 32px), 344px);
-    min-height: 56px;
+    min-height: 72px;
     margin: 0;
     padding: 16px 24px;
-    border-radius: 16px;
+    border-radius: 32px;
     background: rgba(18, 29, 108, 0.5);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -1621,13 +1695,14 @@ body.modal-open #hudModal * {
     display: block;
     width: 24px;
     height: 24px;
+    filter: brightness(0) saturate(100%) invert(94%) sepia(40%) saturate(311%) hue-rotate(339deg) brightness(102%) contrast(96%);
   }
   .mobile-hud__item--active {
-    width: 56px;
-    height: 40px;
-    flex-basis: 56px;
+    width: 24px;
+    height: 24px;
+    flex-basis: 24px;
     border-radius: 16px;
-    background: rgba(255, 253, 246, 0.96);
+    background: transparent;
   }
   .mobile-hud__item--active img {
     width: 24px;
@@ -1726,14 +1801,16 @@ body.modal-open #hudModal * {
     filter: none;
   }
   .intro-kicker {
-    left: calc(50% - 187.5px + 140px);
+    left: 50%;
     top: 41.8054px;
-    width: 96px;
-    transform: none;
+    width: 230px;
+    transform: translateX(-50%);
     font-size: 16px;
+    line-height: 1;
     letter-spacing: 0;
     text-align: center;
     color: #121d6c;
+    white-space: nowrap;
   }
   .name-left {
     left: calc(50% - 187.5px + 37px);
@@ -2126,7 +2203,17 @@ body.modal-open #hudModal * {
   .attire-title { left: 50%; transform: translateX(-50%); top: 104px; width: 89px; font-size: 16px; font-weight: 600; color: #121d6c; }
   .attire-line { left: 50%; transform: translateX(-50%); top: 133px; width: 208px; font-size: 12px; font-weight: 500; color: #000; }
   .attire-note { left: 50%; transform: translateX(-50%); top: 153px; width: 343px; font-size: 10px; font-weight: 400; color: #000; }
-  .attire-subtitle { left: 50%; transform: translateX(-50%); top: 190px; width: 136px; font-size: 16px; font-weight: 600; color: #121d6c; }
+  .attire-subtitle {
+    left: 50%;
+    transform: translateX(-50%);
+    top: 190px;
+    width: 343px;
+    text-align: center;
+    white-space: normal;
+    font-size: 16px;
+    font-weight: 600;
+    color: #121d6c;
+  }
   .attire-colors { left: 50%; transform: translateX(-50%); top: 224px; width: 313px; height: 105px; border-radius: 28px; }
   .swatch { top: 12px; width: 60px; height: 60px; }
   .attire-colors img.swatch { display: none !important; }
@@ -2234,31 +2321,46 @@ body.modal-open #hudModal * {
   }
 
   .gift {
-    height: 940px;
+    height: auto;
+    min-height: 1100px;
     background: #faf1e3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 32px;
+    padding-bottom: 40px;
+    position: relative;
   }
   .gift h2 {
-    left: 16px;
+    position: relative;
+    left: auto;
     transform: none;
-    top: 32px;
-    width: 343px;
-    height: 96px;
+    top: auto;
+    width: calc(100% - 32px);
+    max-width: 343px;
+    height: auto;
+    min-height: 80px;
     font-family: "Anton", sans-serif;
     font-style: normal;
     font-weight: 400;
-    font-size: 32px;
-    line-height: 48px;
+    font-size: 28px;
+    line-height: 1.3;
     text-align: center;
     color: #121d6c;
+    margin-bottom: 24px;
+    flex-shrink: 0;
   }
   .gift-ticket {
-    left: 50%;
-    transform: translateX(-50%);
+    position: relative;
+    left: auto;
+    transform: none;
     width: 163px;
     height: 358px;
+    top: auto !important;
+    margin: 16px 0;
   }
-  .gift-ticket--left { top: 152px; }
-  .gift-ticket--right { top: 550px; }
+  .gift-ticket--left { top: auto !important; }
+  .gift-ticket--right { top: auto !important; }
   .gift-ticket-bg { display: none; }
   .gift-ticket-bg-mobile {
     display: block;
@@ -2291,6 +2393,14 @@ body.modal-open #hudModal * {
     line-height: 24px;
   }
   .gift-doodle { display: none; }
+  .gift-passport-mobile {
+    display: none;
+    position: relative;
+    width: 100px;
+    height: auto;
+    margin: -16px auto -16px;
+    z-index: 3;
+  }
   .gift-doodle-mobile {
     display: block;
     position: absolute;
@@ -2299,19 +2409,19 @@ body.modal-open #hudModal * {
     z-index: 1;
   }
   .gift-doodle-mobile--left {
-    left: -191px;
-    top: 275px;
+    left: -190px;
+    top: 274px;
     width: 279px;
-    height: 235px;
-    transform: rotate(-14.5deg);
+    height: auto;
+    transform: rotate(-10deg);
   }
   .gift-doodle-mobile--right {
-    left: auto;
     right: -69px;
-    top: auto;
     bottom: 0;
+    top: auto;
+    left: auto;
     width: 139px;
-    height: 185px;
+    height: auto;
   }
 
   .journey2 {
@@ -2416,7 +2526,7 @@ body.modal-open #hudModal * {
   .wish-card h3 {
     top: 13px;
     left: 16px;
-    width: 71px;
+    width: 295px;
     height: 27px;
     font-family: "Anton", sans-serif;
     font-style: normal;
@@ -2424,6 +2534,9 @@ body.modal-open #hudModal * {
     font-size: 16px;
     line-height: normal;
     color: #121d6c;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .wish-card p {
     top: 48px;

@@ -67,6 +67,9 @@
     .feedback { margin-top:14px; padding:12px 14px; border:1px solid #dfc39e; border-radius:14px; background: rgba(255,250,242,.92); }
     .giftItemCard { border:1px solid #ddc8a8; border-radius:16px; padding:14px; background:#fff8eb; }
     .giftMeta { color: var(--ink-soft); font-size:.88rem; }
+    .giftFundingNote { margin: 8px 0 0; color: var(--ink-soft); font-size:.85rem; line-height:1.5; }
+    .imageField { display:grid; gap:8px; }
+    .imageField label { font-size:.82rem; }
     .hidden { display:none !important; }
     @media (max-width: 960px) {
       .layout { grid-template-columns: 1fr; }
@@ -168,8 +171,8 @@
           </section>
 
           <section class="panel hidden" data-panel="gift">
-            <h2 class="panelTitle">Gifts</h2>
-            <p class="panelDescription">Control E-Kaut and Gift List popup copy.</p>
+            <h2 class="panelTitle">Gift List Manager</h2>
+            <p class="panelDescription">Set each gift target, edit the wording, and track how much has already been funded by guests.</p>
             <div class="stack">
               <div>
                 <div class="sectionHeader">
@@ -181,7 +184,7 @@
                     <input id="ekautTitle" value="Share your blessings" />
                   </label>
                   <label>E-Kaut Description
-                    <textarea id="ekautDescription">All payments are made through Billplz. Your phone number is required to generate the bill, and your kind wishes will be shared alongside your gift!</textarea>
+                    <textarea id="ekautDescription">All payments are through Billplz. Your phone number is required to generate the bill, and your kind wishes will be alongside your gift!</textarea>
                   </label>
                 </div>
               </div>
@@ -198,10 +201,10 @@
                     <input id="giftContributorLabel" value="Contributors Name" />
                   </label>
                   <label>Primary Button Text
-                    <input id="giftPrimaryButtonText" value="Button 1" />
+                    <input id="giftPrimaryButtonText" value="Contribute to This Item" />
                   </label>
                   <label>Chip Label
-                    <input id="giftChipLabel" value="Name" />
+                    <input id="giftChipLabel" value="Contributor" />
                   </label>
                 </div>
               </div>
@@ -209,11 +212,11 @@
                 <div class="sectionHeader actionsInline" style="justify-content:space-between;align-items:center">
                   <div>
                     <h3>Gift Items</h3>
-                    <p>Manage product cards used by Gift List popup.</p>
+                    <p>Manage product cards used by the Gift List popup.</p>
                   </div>
                   <button id="addGiftItem" class="smallOutline" type="button">Add Item</button>
                 </div>
-                <div id="giftItemsMeta" class="giftMeta">Source: -</div>
+                <div id="giftItemsMeta" class="giftMeta">Source: local</div>
                 <div id="giftItems" class="grid1" style="margin-top:10px"></div>
               </div>
             </div>
@@ -307,7 +310,7 @@ Wilayah Persekutuan Putrajaya</textarea>
   <script>
     (function () {
       var PROJECT_KEY = 'haqim-myra-2026';
-      var API_BASE = window.WC_API_BASE || (window.location.protocol + '//' + window.location.hostname + ':8787');
+      var API_BASE = window.WC_API_BASE || (window.location.protocol + '//' + window.location.hostname + ':3000');
       var tabs = document.querySelectorAll('.tab');
       var panels = document.querySelectorAll('[data-panel]');
       var feedback = document.getElementById('feedback');
@@ -360,6 +363,10 @@ Wilayah Persekutuan Putrajaya</textarea>
       var giftSource = 'gift_items';
       var giftItems = [];
 
+      function formatNumber(value) {
+        return Number(value || 0).toLocaleString('en-MY');
+      }
+
       function renderStorySteps() {
         if (!storyStepsContainer) return;
         storyStepsContainer.innerHTML = '';
@@ -410,24 +417,50 @@ Wilayah Persekutuan Putrajaya</textarea>
           var item = giftItems[i];
           var card = document.createElement('div');
           card.className = 'giftItemCard grid1';
-          card.innerHTML =
+          var targetAmount = Number(item.targetAmount || 0);
+          var fundedAmount = Number(item.fundedAmount || 0);
+          var remaining = Math.max(targetAmount - fundedAmount, 0);
+          var status = String(item.status || '').toLowerCase();
+          var isFullyFunded = status === 'fully_funded' || (targetAmount > 0 && fundedAmount >= targetAmount);
+          var names = Array.isArray(item.contributorNames) ? item.contributorNames : [];
+          var cardHtml =
             '<div class="actionsInline" style="justify-content:space-between;align-items:center">' +
               '<strong>' + ((item.title || 'Gift Item').replace(/</g, '&lt;')) + '</strong>' +
-              '<div class="actionsInline">' +
-                '<button class="smallOutline" type="button" data-gift-up="' + i + '">Up</button>' +
-                '<button class="smallOutline" type="button" data-gift-down="' + i + '">Down</button>' +
-                '<button class="smallOutline" type="button" data-gift-remove="' + i + '">Remove</button>' +
-              '</div>' +
-            '</div>' +
-            '<div class="grid2">' +
-              '<label>Title<input data-gift-title="' + i + '" value="' + (item.title || '').replace(/"/g, '&quot;') + '" /></label>' +
-              '<label>Status<input data-gift-status="' + i + '" value="' + (item.status || 'available').replace(/"/g, '&quot;') + '" /></label>' +
-              '<label>Image URL<input data-gift-image="' + i + '" value="' + (item.imageUrl || '').replace(/"/g, '&quot;') + '" /></label>' +
-              '<label>Product URL<input data-gift-product="' + i + '" value="' + (item.productUrl || '').replace(/"/g, '&quot;') + '" /></label>' +
-              '<label>Target Amount<input type="number" min="0" step="0.01" data-gift-target="' + i + '" value="' + Number(item.targetAmount || 0) + '" /></label>' +
-              '<label>Funded Amount<input type="number" min="0" step="0.01" data-gift-funded="' + i + '" value="' + Number(item.fundedAmount || 0) + '" /></label>' +
-            '</div>' +
-            '<label>Description<textarea data-gift-desc="' + i + '">' + (item.description || '') + '</textarea></label>';
+              '<div class="actionsInline">';
+          if (i > 0) {
+            cardHtml += '<button class="smallOutline" type="button" data-gift-up="' + i + '">Up</button>';
+          }
+          if (i < giftItems.length - 1) {
+            cardHtml += '<button class="smallOutline" type="button" data-gift-down="' + i + '">Down</button>';
+          }
+          cardHtml += '<button class="smallOutline" type="button" data-gift-remove="' + i + '">Remove</button></div></div>';
+          cardHtml += '<div class="grid2">';
+          cardHtml += '<label>Title<input data-gift-title="' + i + '" value="' + (item.title || '').replace(/"/g, '&quot;') + '" /></label>';
+          cardHtml += '<label>Status<select data-gift-status="' + i + '">';
+          cardHtml += '<option value="open"' + (status === 'open' ? ' selected' : '') + '>Open</option>';
+          cardHtml += '<option value="fully_funded"' + (status === 'fully_funded' ? ' selected' : '') + '>Fully Funded</option>';
+          cardHtml += '</select></label>';
+          cardHtml += '<label>Target Amount (MYR)<input type="number" min="1" step="1" data-gift-target="' + i + '" value="' + (targetAmount || 0) + '" /></label>';
+          cardHtml += '<label>Funded Amount (auto)<input type="number" min="0" step="1" data-gift-funded="' + i + '" value="' + (fundedAmount || 0) + '" readonly style="background:#f0ebe3;color:#999" /></label>';
+          cardHtml += '</div>';
+          cardHtml += '<div class="imageField">';
+          cardHtml += '<label>Gift Image<input data-gift-image="' + i + '" value="' + (item.imageUrl || '').replace(/"/g, '&quot;') + '" placeholder="https://example.com/gift.jpg" /></label>';
+          cardHtml += '<div class="actionsInline" style="margin-top:4px">';
+          cardHtml += '<label class="smallOutline" style="display:inline-flex;align-items:center;cursor:pointer">';
+          cardHtml += 'Choose image<input type="file" accept="image/*" style="display:none" data-gift-file="' + i + '">';
+          cardHtml += '</label>';
+          if (item.imageUrl) {
+            cardHtml += '<button class="smallOutline" type="button" data-gift-clear="' + i + '">Remove</button>';
+          }
+          cardHtml += '</div>';
+          cardHtml += '<p class="giftFundingNote">' +
+            (isFullyFunded ? '✓ Fully funded' : 'RM ' + remaining + ' still needed') +
+            ' | ' + formatNumber(fundedAmount) + ' of ' + formatNumber(targetAmount) + ' MYR' +
+            ' | ' + (item.contributorCount || 0) + ' contributor(s)' +
+            '</p>';
+          cardHtml += '</div>';
+          cardHtml += '<label>Description<textarea data-gift-desc="' + i + '">' + (item.description || '') + '</textarea></label>';
+          card.innerHTML = cardHtml;
           giftItemsContainer.appendChild(card);
         }
       }
@@ -440,18 +473,18 @@ Wilayah Persekutuan Putrajaya</textarea>
           var titleInput = giftItemsContainer.querySelector('[data-gift-title="' + i + '"]');
           var statusInput = giftItemsContainer.querySelector('[data-gift-status="' + i + '"]');
           var imageInput = giftItemsContainer.querySelector('[data-gift-image="' + i + '"]');
-          var productInput = giftItemsContainer.querySelector('[data-gift-product="' + i + '"]');
           var targetInput = giftItemsContainer.querySelector('[data-gift-target="' + i + '"]');
           var fundedInput = giftItemsContainer.querySelector('[data-gift-funded="' + i + '"]');
           var descInput = giftItemsContainer.querySelector('[data-gift-desc="' + i + '"]');
           next.push({
-            id: base.id || '',
+            id: base.id || ('gift-' + Date.now() + '-' + i + '-' + Math.random().toString(36).slice(2, 8)),
             title: titleInput ? titleInput.value.trim() : '',
-            status: statusInput ? statusInput.value.trim() : 'available',
+            status: statusInput ? statusInput.value : 'open',
             imageUrl: imageInput ? imageInput.value.trim() : '',
-            productUrl: productInput ? productInput.value.trim() : '',
             targetAmount: targetInput ? Number(targetInput.value || 0) : 0,
             fundedAmount: fundedInput ? Number(fundedInput.value || 0) : 0,
+            contributorCount: base.contributorCount || 0,
+            contributorNames: Array.isArray(base.contributorNames) ? base.contributorNames : [],
             description: descInput ? descInput.value.trim() : ''
           });
         }
@@ -607,14 +640,15 @@ Wilayah Persekutuan Putrajaya</textarea>
         addGiftItemBtn.addEventListener('click', function () {
           readGiftItemsFromUi();
           giftItems.push({
-            id: '',
+            id: 'gift-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
             title: 'New Gift Item',
-            status: 'available',
+            status: 'open',
             imageUrl: '',
-            productUrl: '',
-            targetAmount: 0,
+            targetAmount: 200,
             fundedAmount: 0,
-            description: ''
+            contributorCount: 0,
+            contributorNames: [],
+            description: 'Describe this gift item.'
           });
           renderGiftItems();
         });
@@ -649,6 +683,37 @@ Wilayah Persekutuan Putrajaya</textarea>
             var removeIndex = Number(remove);
             giftItems = giftItems.filter(function (_, i) { return i !== removeIndex; });
           }
+          renderGiftItems();
+        });
+
+        giftItemsContainer.addEventListener('change', function (e) {
+          var target = e.target;
+          if (!(target instanceof HTMLInputElement) || !target.files || !target.files[0]) return;
+          var fileIdx = target.getAttribute('data-gift-file');
+          if (fileIdx === null) return;
+          var idx = Number(fileIdx);
+          if (isNaN(idx) || idx >= giftItems.length) return;
+
+          var reader = new FileReader();
+          reader.onload = function () {
+            giftItems[idx].imageUrl = String(reader.result || '');
+            renderGiftItems();
+          };
+          reader.onerror = function () {
+            window.alert('Unable to process image.');
+          };
+          reader.readAsDataURL(target.files[0]);
+          target.value = '';
+        });
+
+        giftItemsContainer.addEventListener('click', function (e) {
+          var target = e.target;
+          if (!(target instanceof HTMLElement)) return;
+          var removeIdx = target.getAttribute('data-gift-clear');
+          if (removeIdx === null) return;
+          var idx = Number(removeIdx);
+          if (isNaN(idx) || idx >= giftItems.length) return;
+          giftItems[idx].imageUrl = '';
           renderGiftItems();
         });
       }

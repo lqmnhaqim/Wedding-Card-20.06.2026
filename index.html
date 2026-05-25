@@ -481,57 +481,54 @@
     .web-hud {
       position: fixed;
       left: 50%;
-      bottom: 16px;
-      width: min(calc(100vw - 32px), 1200px);
+      bottom: 1rem;
+      width: min(calc(100vw - 2rem), 1392px);
+      height: 80px;
       margin: 0;
-      display: flex;
-      align-items: center;
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 190px));
       justify-content: center;
-      gap: 24px;
-      padding: 16px 24px;
+      align-items: center;
+      gap: 20px;
+      padding: 10px 20px;
+      border: 1px solid rgba(255, 253, 246, 0.42);
       border-radius: 32px;
       background: rgba(18, 29, 108, 0.68);
-      backdrop-filter: blur(204px);
-      -webkit-backdrop-filter: blur(204px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       transform: translateX(-50%);
-      z-index: 34;
+      z-index: 35;
     }
     .web-hud__item {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 56px;
-      height: 40px;
+      width: 190px;
+      height: 60px;
+      padding: 0;
       border: 0;
-      border-radius: 24px;
+      border-radius: 32px;
       background: transparent;
+      color: inherit;
       cursor: pointer;
-      transition: background-color .2s ease, transform .15s ease;
+      transition: background-color .18s ease;
     }
     .web-hud__item img {
-      width: 24px;
-      height: 24px;
+      width: 48px;
+      height: 48px;
       display: block;
       object-fit: contain;
       filter: brightness(0) saturate(100%) invert(94%) sepia(40%) saturate(311%) hue-rotate(339deg) brightness(102%) contrast(96%);
     }
-    .web-hud__item:hover {
-      background: rgba(255, 255, 255, 0.07);
-      transform: translateY(-1px);
-    }
     .web-hud__item--active {
-      width: 56px;
-      height: 40px;
-      background: rgba(141, 149, 199, 0.28);
-      box-shadow: none;
+      background: rgba(255, 253, 246, 0.96);
     }
     .web-hud__item--active img {
-      width: 24px;
-      height: 24px;
-      filter: brightness(0) saturate(100%) invert(100%) sepia(30%) saturate(156%) hue-rotate(188deg) brightness(113%) contrast(88%);
+      filter: brightness(0) saturate(100%) invert(12%) sepia(38%) saturate(2556%) hue-rotate(224deg) brightness(92%) contrast(106%);
     }
     .web-hud__item:focus-visible {
-      outline: 2px solid rgba(184, 193, 255, 0.9);
+      outline: 2px solid rgba(255, 253, 246, 0.95);
       outline-offset: 2px;
     }
     @media (max-width: 768px) {
@@ -695,22 +692,29 @@
     }
     @media (max-width: 760px) {
       #hudModal .figma-exact-modal__dialog.figma-exact-modal__dialog--gift-list {
-        width: min(823px, calc(100vw - 12px)) !important;
-        height: min(856px, calc(100vh - 12px)) !important;
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        max-height: none !important;
+        transform: none !important;
+        left: 0 !important;
+        top: 0 !important;
+        border-radius: 0 !important;
       }
       #hudModal .figma-exact-modal__dialog--gift-list .figma-gift-panel {
-        left: 10px !important;
-        top: 10px !important;
-        right: 10px !important;
-        bottom: 10px !important;
-        width: auto !important;
-        height: auto !important;
-        padding: 12px !important;
+        left: 0 !important;
+        top: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        padding: 20px 16px !important;
         overflow: auto !important;
+        border-radius: 0 !important;
       }
       #hudModal .figma-exact-modal__dialog--gift-list .figma-gift-title {
         font-size: 36px !important;
-        margin-bottom: 10px !important;
+        margin-bottom: 18px !important;
       }
       
     #hudModal .figma-exact-modal__dialog--gift-list .figma-gift-close::before {
@@ -720,44 +724,49 @@
       transform: translateY(-1px) !important;
     }
       #hudModal .figma-exact-modal__dialog--gift-list .figma-gift-row {
-        grid-template-columns: 92px 1fr !important;
-        column-gap: 10px !important;
+        grid-template-columns: 110px 1fr !important;
+        column-gap: 14px !important;
       }
       #hudModal .figma-exact-modal__dialog--gift-list .figma-gift-thumb-wrap {
-        width: 92px !important;
-        height: 92px !important;
-        padding: 5px !important;
+        width: 110px !important;
+        height: 110px !important;
+        padding: 6px !important;
       }
       #hudModal .figma-exact-modal__dialog--gift-list .figma-gift-thumb {
-        width: 82px !important;
-        height: 82px !important;
+        width: 98px !important;
+        height: 98px !important;
       }
       #hudModal .figma-exact-modal__dialog--gift-list .figma-gift-meta-title {
-        font-size: 16px !important;
-        margin: 2px 0 6px !important;
+        font-size: 18px !important;
+        margin: 2px 0 10px !important;
       }
       #hudModal .figma-exact-modal__dialog--gift-list .figma-gift-pill,
       #hudModal .figma-exact-modal__dialog--gift-list .figma-gift-chips {
         width: 100% !important;
-        height: 34px !important;
-        font-size: 12px !important;
-        gap: 8px !important;
+        height: 40px !important;
+        font-size: 14px !important;
+        gap: 10px !important;
       }
       #hudModal .figma-exact-modal__dialog--gift-list .figma-gift-funded-mask {
-        inset: 5px !important;
-        font-size: 12px !important;
+        inset: 6px !important;
+        font-size: 14px !important;
+      }
+      #hudModal .figma-exact-modal__dialog--gift-list .figma-gift-list {
+        gap: 20px !important;
       }
     }
     @media (max-width: 760px) {
       #hudModal .figma-exact-modal__dialog.figma-exact-modal__dialog--contribution {
         position: fixed !important;
-        left: 50% !important;
-        top: 50% !important;
-        transform: translate(-50%, -50%) !important;
-        width: min(665px, calc(100vw - 16px)) !important;
-        height: min(748px, calc(100vh - 16px)) !important;
-        max-height: calc(100vh - 16px) !important;
-        padding: 8px !important;
+        left: 0 !important;
+        top: 0 !important;
+        transform: none !important;
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        max-height: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
         overflow: hidden !important;
       }
       #hudModal .figma-exact-modal__dialog--contribution .figma-exact-modal__close {
@@ -765,105 +774,153 @@
       }
       #hudModal .figma-exact-modal__dialog--contribution .figma-ekaut-popup {
         height: 100% !important;
-        padding-top: 38px !important;
+        padding-top: 0 !important;
+        border-radius: 0 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
       }
       #hudModal .figma-exact-modal__dialog--contribution .figma-ekaut-close {
-      position: absolute !important;
-      right: 16px !important;
-      top: 16px !important;
-      width: 48px !important;
-      height: 48px !important;
-      border: 0 !important;
-      border-radius: 50% !important;
-      background: #ece8de !important;
-      color: #9b9b9b !important;
-      font-family: "Inter", "Arial", sans-serif !important;
-      font-size: 28px !important;
-      font-weight: 400 !important;
-      line-height: 1 !important;
-      display: inline-flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      cursor: pointer !important;
-      padding: 0 !important;
-      z-index: 3 !important;
-      box-shadow: none !important;
-      transition: transform .14s ease, box-shadow .18s ease, background-color .18s ease, color .18s ease !important;
-      outline: none !important;
-    }
-    #hudModal .figma-exact-modal__dialog--contribution .figma-ekaut-close::before {
-      content: '\00d7' !important;
-      display: block !important;
-      line-height: 1 !important;
-      transform: translateY(-1px) !important;
-    }
-    #hudModal .figma-exact-modal__dialog--contribution .figma-ekaut-close:hover {
-      background: #f3efe6 !important;
-      color: #7f7f7f !important;
-      transform: translateY(-1px) !important;
-      box-shadow: 0 6px 14px rgba(0,0,0,.12) !important;
-    }
-    #hudModal .figma-exact-modal__dialog--contribution .figma-ekaut-close:active {
-      transform: translateY(0) scale(.96) !important;
-      background: #e5dfd2 !important;
-      box-shadow: inset 0 1px 2px rgba(0,0,0,.14) !important;
-    }
-    #hudModal .figma-exact-modal__dialog--contribution .figma-ekaut-close:focus-visible {
-      box-shadow: 0 0 0 3px rgba(18,29,108,.22) !important;
-    }
-      #hudModal .figma-exact-modal__dialog--contribution .figma-exact-modal__contribution-head,
-      #hudModal .figma-exact-modal__dialog--contribution .figma-exact-modal__contribution-head h2,
-      #hudModal .figma-exact-modal__dialog--contribution .figma-exact-modal__contribution-head p,
-      #hudModal .figma-exact-modal__dialog--contribution .figma-ekaut-form {
+        position: fixed !important;
+        right: 14px !important;
+        top: 14px !important;
+        width: 40px !important;
+        height: 40px !important;
+        border: 0 !important;
+        border-radius: 50% !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+        color: #faf1e3 !important;
+        font-family: "Inter", "Arial", sans-serif !important;
+        font-size: 24px !important;
+        font-weight: 400 !important;
+        line-height: 1 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+        padding: 0 !important;
+        z-index: 100 !important;
+        box-shadow: none !important;
+        transition: transform .14s ease, background-color .18s ease !important;
+        outline: none !important;
+      }
+      #hudModal .figma-exact-modal__dialog--contribution .figma-ekaut-close::before {
+        content: '\00d7' !important;
+        display: block !important;
+        line-height: 1 !important;
+        transform: translateY(-1px) !important;
+      }
+      #hudModal .figma-exact-modal__dialog--contribution .figma-ekaut-close:hover {
+        background: rgba(255, 255, 255, 0.25) !important;
+        transform: scale(1.05) !important;
+      }
+      #hudModal .figma-exact-modal__dialog--contribution .figma-ekaut-close:active {
+        transform: scale(0.95) !important;
+      }
+      #hudModal .figma-exact-modal__dialog--contribution .figma-exact-modal__contribution-head {
+        position: relative !important;
+        left: auto !important;
+        top: auto !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 56px 20px 0 !important;
+        text-align: center !important;
+      }
+      #hudModal .figma-exact-modal__dialog--contribution .figma-exact-modal__contribution-head h2 {
+        position: static !important;
+        left: auto !important;
+        top: auto !important;
+        transform: none !important;
+        margin: 0 0 8px 0 !important;
+        font-family: "Playfair Display", serif !important;
+        font-size: 32px !important;
+        line-height: 1.1 !important;
+        color: #faf1e3 !important;
+        white-space: normal !important;
+        text-align: center !important;
+      }
+      #hudModal .figma-exact-modal__dialog--contribution .figma-exact-modal__contribution-head p {
         position: static !important;
         left: auto !important;
         top: auto !important;
         width: auto !important;
-      }
-      #hudModal .figma-exact-modal__dialog--contribution .figma-exact-modal__contribution-head h2 {
-        font-size: 32px !important;
-        line-height: 0.95 !important;
+        margin: 0 0 20px 0 !important;
+        font-family: "Playfair Display", serif !important;
+        font-size: 13px !important;
+        line-height: 1.4 !important;
+        color: rgba(255, 241, 227, 0.7) !important;
         text-align: center !important;
-        margin: -30px 0 2px 0 !important;
-        left: auto !important;
-        transform: none !important;
-        white-space: normal !important;
+        max-width: 320px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
       }
-      #hudModal .figma-exact-modal__dialog--contribution .figma-exact-modal__contribution-head p {
-        margin: 6px 4px 0 !important;
-        font-size: 11px !important;
+      #hudModal .figma-exact-modal__dialog--contribution .figma-quick-summary {
+        position: relative !important;
+        left: auto !important;
+        top: auto !important;
+        width: auto !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+        margin: 0 16px 18px !important;
+        padding: 0 !important;
+      }
+      #hudModal .figma-exact-modal__dialog--contribution .figma-quick-card {
+        border-radius: 10px !important;
+        border: 1px solid rgba(255, 253, 246, 0.3) !important;
+        background: rgba(255, 253, 246, 0.08) !important;
+        padding: 10px 6px !important;
+        display: grid !important;
+        gap: 4px !important;
+        text-align: center !important;
+      }
+      #hudModal .figma-exact-modal__dialog--contribution .figma-quick-card span {
+        font-size: 10px !important;
         line-height: 1.2 !important;
+        color: rgba(255, 241, 227, 0.6) !important;
+        font-family: "Playfair Display", serif !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.3px !important;
+      }
+      #hudModal .figma-exact-modal__dialog--contribution .figma-quick-card strong {
+        font-size: 15px !important;
+        line-height: 1.2 !important;
+        color: #faf1e3 !important;
+        font-family: "Playfair Display", serif !important;
+      }
+      #hudModal .figma-exact-modal__dialog--contribution .figma-ekaut-form {
+        position: relative !important;
+        left: auto !important;
+        top: auto !important;
+        width: auto !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        margin: 0 16px 24px !important;
+        padding: 20px 16px !important;
+        gap: 14px !important;
+        background: rgba(255, 253, 246, 0.96) !important;
+        border-radius: 16px !important;
+        box-sizing: border-box !important;
+      }
+      #hudModal .figma-exact-modal__dialog--contribution .figma-ekaut-label {
+        text-align: left !important;
+        margin: 0 0 6px !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        color: #121d6c !important;
+        display: block !important;
       }
       #hudModal .figma-exact-modal__dialog--contribution .figma-ekaut-amounts {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        gap: 10px !important;
-      }
-      #hudModal .figma-exact-modal__dialog--contribution .figma-quick-summary {
-        position: static !important;
-        width: auto !important;
-        grid-template-columns: 1fr !important;
-        gap: 6px !important;
-        margin-top: 6px !important;
-      }
-      #hudModal .figma-exact-modal__dialog--contribution .figma-ekaut-form {
-        height: auto !important;
-        max-height: calc(100% - 190px) !important;
-        overflow: hidden !important;
-        margin-top: 6px !important;
-        padding: 12px !important;
-        gap: 6px !important;
-      }
-      #hudModal .figma-exact-modal__dialog--contribution .figma-ekaut-label {
-        text-align: center !important;
-        margin: 0 0 4px !important;
-        font-size: 12px !important;
+        gap: 8px !important;
       }
       #hudModal .figma-exact-modal__dialog--contribution .figma-ekaut-amount {
-        height: 32px !important;
+        height: 38px !important;
         width: 100% !important;
         box-sizing: border-box !important;
-        font-size: 12px !important;
-        line-height: 18px !important;
+        font-size: 13px !important;
+        line-height: 22px !important;
+        border-radius: 20px !important;
       }
       #hudModal .figma-exact-modal__dialog--contribution .figma-ekaut-amount.figma-ekaut-amount--custom {
         width: 100% !important;
@@ -871,21 +928,37 @@
       }
       #hudModal .figma-exact-modal__dialog--contribution .figma-ekaut-input,
       #hudModal .figma-exact-modal__dialog--contribution .figma-ekaut-textarea {
-        height: 38px !important;
-        min-height: 38px !important;
+        height: 42px !important;
+        min-height: 42px !important;
         font-size: 14px !important;
+        border-radius: 12px !important;
+        padding: 0 14px !important;
+        background: rgba(18, 29, 108, 0.08) !important;
+        color: #121d6c !important;
+        box-shadow: none !important;
       }
       #hudModal .figma-exact-modal__dialog--contribution .figma-ekaut-textarea {
-        padding-top: 8px !important;
-        padding-bottom: 8px !important;
+        height: 60px !important;
+        min-height: 60px !important;
+        padding-top: 10px !important;
+        padding-bottom: 10px !important;
+        resize: none !important;
+      }
+      #hudModal .figma-exact-modal__dialog--contribution .figma-ekaut-input::placeholder,
+      #hudModal .figma-exact-modal__dialog--contribution .figma-ekaut-textarea::placeholder {
+        color: rgba(18, 29, 108, 0.35) !important;
+      }
+      #hudModal .figma-exact-modal__dialog--contribution .figma-ekaut-custom {
+        margin-bottom: 0 !important;
       }
       #hudModal .figma-exact-modal__dialog--contribution .figma-ekaut-submit {
-        width: 160px !important;
-        height: 32px !important;
-        font-size: 16px !important;
-        line-height: 18px !important;
-        margin-top: 6px !important;
-        transform: translateY(2px) !important;
+        width: 100% !important;
+        height: 44px !important;
+        margin: 8px auto 0 !important;
+        font-size: 15px !important;
+        line-height: 22px !important;
+        transform: none !important;
+        border-radius: 22px !important;
       }
     }
     #hudModal .figma-exact-modal__dialog--rsvp.is-attending {
@@ -1249,16 +1322,20 @@
 </head>
 <body>
         <div aria-hidden="true" class="figma-exact-love-snow">
-    <span class="figma-exact-love-snow__flake" style="--love-left:4%;--love-delay:-1.8s;--love-duration:12.5s;--love-size:20px;--love-drift:18px;--love-opacity:0.42;">&#9992;&#65038;</span>
-    <span class="figma-exact-love-snow__flake" style="--love-left:12%;--love-delay:-5.1s;--love-duration:15.2s;--love-size:26px;--love-drift:-14px;--love-opacity:0.32;">&#9992;&#65038;</span>
-    <span class="figma-exact-love-snow__flake" style="--love-left:21%;--love-delay:-3.2s;--love-duration:11.4s;--love-size:18px;--love-drift:12px;--love-opacity:0.48;">&#9992;&#65038;</span>
-    <span class="figma-exact-love-snow__flake" style="--love-left:32%;--love-delay:-7.4s;--love-duration:14.8s;--love-size:28px;--love-drift:-20px;--love-opacity:0.28;">&#9992;&#65038;</span>
-    <span class="figma-exact-love-snow__flake" style="--love-left:41%;--love-delay:-2.6s;--love-duration:13.1s;--love-size:22px;--love-drift:16px;--love-opacity:0.38;">&#9992;&#65038;</span>
-    <span class="figma-exact-love-snow__flake" style="--love-left:53%;--love-delay:-8.8s;--love-duration:16.7s;--love-size:24px;--love-drift:-12px;--love-opacity:0.30;">&#9992;&#65038;</span>
-    <span class="figma-exact-love-snow__flake" style="--love-left:64%;--love-delay:-4.5s;--love-duration:12.8s;--love-size:19px;--love-drift:22px;--love-opacity:0.44;">&#9992;&#65038;</span>
-    <span class="figma-exact-love-snow__flake" style="--love-left:72%;--love-delay:-9.7s;--love-duration:15.9s;--love-size:27px;--love-drift:-18px;--love-opacity:0.26;">&#9992;&#65038;</span>
-    <span class="figma-exact-love-snow__flake" style="--love-left:81%;--love-delay:-6.3s;--love-duration:11.9s;--love-size:21px;--love-drift:10px;--love-opacity:0.40;">&#9992;&#65038;</span>
-    <span class="figma-exact-love-snow__flake" style="--love-left:93%;--love-delay:-11.2s;--love-duration:14.3s;--love-size:23px;--love-drift:-16px;--love-opacity:0.34;">&#9992;&#65038;</span>
+    <span class="figma-exact-love-snow__flake" style="--love-left:5%;--love-top:-4vh;--love-delay:-2.1s;--love-duration:21.0s;--love-size:20px;--love-drift:18px;--love-opacity:0.38;">&#9992;&#65038;</span>
+    <span class="figma-exact-love-snow__flake" style="--love-left:14%;--love-top:-9vh;--love-delay:-6.7s;--love-duration:24.0s;--love-size:24px;--love-drift:-14px;--love-opacity:0.30;">&#9992;&#65038;</span>
+    <span class="figma-exact-love-snow__flake" style="--love-left:23%;--love-top:-2vh;--love-delay:-1.2s;--love-duration:19.5s;--love-size:18px;--love-drift:12px;--love-opacity:0.42;">&#9992;&#65038;</span>
+    <span class="figma-exact-love-snow__flake" style="--love-left:32%;--love-top:-11vh;--love-delay:-9.8s;--love-duration:26.0s;--love-size:26px;--love-drift:-20px;--love-opacity:0.25;">&#9992;&#65038;</span>
+    <span class="figma-exact-love-snow__flake" style="--love-left:41%;--love-top:-6vh;--love-delay:-14.4s;--love-duration:22.5s;--love-size:21px;--love-drift:16px;--love-opacity:0.34;">&#9992;&#65038;</span>
+    <span class="figma-exact-love-snow__flake" style="--love-left:50%;--love-top:-1vh;--love-delay:-3.7s;--love-duration:19.8s;--love-size:23px;--love-drift:-12px;--love-opacity:0.28;">&#9992;&#65038;</span>
+    <span class="figma-exact-love-snow__flake" style="--love-left:59%;--love-top:-8vh;--love-delay:-11.0s;--love-duration:25.5s;--love-size:27px;--love-drift:-18px;--love-opacity:0.32;">&#9992;&#65038;</span>
+    <span class="figma-exact-love-snow__flake" style="--love-left:68%;--love-top:-5vh;--love-delay:-7.3s;--love-duration:21.3s;--love-size:19px;--love-drift:10px;--love-opacity:0.40;">&#9992;&#65038;</span>
+    <span class="figma-exact-love-snow__flake" style="--love-left:77%;--love-top:-10vh;--love-delay:-20.0s;--love-duration:24.2s;--love-size:25px;--love-drift:-14px;--love-opacity:0.26;">&#9992;&#65038;</span>
+    <span class="figma-exact-love-snow__flake" style="--love-left:86%;--love-top:-3vh;--love-delay:-13.5s;--love-duration:20.1s;--love-size:20px;--love-drift:22px;--love-opacity:0.37;">&#9992;&#65038;</span>
+    <span class="figma-exact-love-snow__flake" style="--love-left:94%;--love-top:-7vh;--love-delay:-17.8s;--love-duration:23.0s;--love-size:22px;--love-drift:-16px;--love-opacity:0.31;">&#9992;&#65038;</span>
+    <span class="figma-exact-love-snow__flake" style="--love-left:3%;--love-top:-8vh;--love-delay:-22.0s;--love-duration:26.5s;--love-size:28px;--love-drift:12px;--love-opacity:0.29;">&#9992;&#65038;</span>
+    <span class="figma-exact-love-snow__flake" style="--love-left:47%;--love-top:-4vh;--love-delay:-25.3s;--love-duration:21.8s;--love-size:18px;--love-drift:-10px;--love-opacity:0.43;">&#9992;&#65038;</span>
+    <span class="figma-exact-love-snow__flake" style="--love-left:73%;--love-top:-9vh;--love-delay:-28.5s;--love-duration:25.0s;--love-size:24px;--love-drift:16px;--love-opacity:0.33;">&#9992;&#65038;</span>
   </div>
 <main class="wedding-card">
     <section class="sec intro" aria-label="Intro">
@@ -1270,7 +1347,7 @@
       <h1 class="name-left" id="nameLeft">HAQIM</h1>
       <h1 class="name-right" id="nameRight">MYRA</h1>
       <div class="photo-frame">
-        <img src="https://www.figma.com/api/mcp/asset/c25cafb9-447f-4162-93e6-46e6820b73da" alt="Bride and Groom" />
+        <img src="assets/mobile/Photo frame (bride+groom).png" alt="Bride and Groom" />
       </div>
       <div class="bottombar"></div>
     </section>
@@ -1292,7 +1369,7 @@
       <p class="couple-name couple-name--2">Amirah Batrisyia Binti Rosmadi</p>
     </section>
 
-    <section class="sec save-date" aria-label="Save The Date">
+    <section class="sec save-date" id="save-the-date" aria-label="Save The Date">
       <div class="save-date-border" aria-hidden="true"></div>
       <img class="plane-img" src="assets/webview/4.png" alt="" aria-hidden="true" />
       <h2 id="saveDateTitle">Save The Date</h2>
@@ -1318,6 +1395,8 @@
       <div class="labels">
         <span>days</span><span>hours</span><span>minutes</span><span>seconds</span>
       </div>
+      <button id="googleCalendarBtn" class="save-date-btn save-date-btn--google" type="button">Google Calendar</button>
+      <button id="appleCalendarBtn" class="save-date-btn save-date-btn--apple" type="button">Apple Calendar</button>
     </section>
 
     <section class="sec day" aria-label="Tentative and Route">
@@ -1341,8 +1420,8 @@
         <div class="route-grid">
           <img class="route-map route-map--flat" src="assets/webview/9.png" alt="Route Graphic" />
           <div class="route-map-vector" aria-hidden="true">
-            <img class="route-map-vector__path" src="https://www.figma.com/api/mcp/asset/2efd8ce0-99e1-41f6-8420-ecf68a9a580b" alt="" />
-            <img class="route-map-vector__pin" src="https://www.figma.com/api/mcp/asset/2bba27a6-6adc-4cd4-a153-bb9b06c1e4bb" alt="" />
+            <img class="route-map-vector__path" src="assets/webview/9.png" alt="" />
+            <img class="route-map-vector__pin" src="assets/webview/9.png" alt="" />
           </div>
           <iframe
             id="routeMapEmbed"
@@ -1375,8 +1454,8 @@
       <p class="attire-note">( Jeans, Jersey T-shirts, and Slippers are not allowed )</p>
       <p class="attire-subtitle">Colours To Avoid!</p>
       <div class="attire-colors">
-        <img class="swatch swatch--navy" src="https://www.figma.com/api/mcp/asset/6b0c0447-fc1a-4439-84b2-b1b800ca7d4d" alt="" aria-hidden="true" />
-        <img class="swatch swatch--pink" src="https://www.figma.com/api/mcp/asset/9480415a-b31b-4f38-8423-a662016e529f" alt="" aria-hidden="true" />
+        <img class="swatch swatch--navy" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='110' height='110'%3E%3Ccircle cx='55' cy='55' r='55' fill='%2305058f'/%3E%3C/svg%3E" alt="" aria-hidden="true" />
+        <img class="swatch swatch--pink" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='110' height='110'%3E%3Ccircle cx='55' cy='55' r='55' fill='%23d49a9c'/%3E%3C/svg%3E" alt="" aria-hidden="true" />
         <span class="swatch swatch-bg swatch-bg--navy" aria-hidden="true"></span>
         <span class="swatch swatch-bg swatch-bg--pink" aria-hidden="true"></span>
         <p>Navy Blue</p>
@@ -1387,12 +1466,12 @@
         To keep things special, we'd truly appreciate it<br/>
         if you could avoid these shades on our big day.</p>
       <img class="attire-doodle attire-doodle--1" src="assets/webview/11.png" alt="" aria-hidden="true" />
-      <img class="attire-doodle attire-doodle--1-mobile" src="https://www.figma.com/api/mcp/asset/1467ef5d-88b6-47e8-a460-91b63a5f47f8" alt="" aria-hidden="true" />
+      <img class="attire-doodle attire-doodle--1-mobile" src="assets/mobile/1.png" alt="" aria-hidden="true" />
     </section>
 
     <section class="sec rsvp" aria-label="RSVP">
       <img class="rsvp-doodle" src="assets/webview/13.png" alt="" aria-hidden="true" />
-      <img class="rsvp-doodle-mobile" src="https://www.figma.com/api/mcp/asset/dd468b79-b9b5-49be-ba95-10f5acef426a" alt="" aria-hidden="true" />
+      <img class="rsvp-doodle-mobile" src="assets/mobile/RSVP Flight.png" alt="" aria-hidden="true" />
       <h2><span>Your flight to celebration</span><span>awaits!</span><span>RSVP now!</span></h2>
       <p class="rsvp-note" id="rsvpNote"><span>Kindly RSVP by May 23rd, 2026</span><span>to help us with the final arrangements</span><span>for our special day.</span></p>
       <button id="rsvpOpenButton" type="button" onclick="window.__openHudPanel && window.__openHudPanel('rsvp')">RSVP</button>
@@ -1405,17 +1484,19 @@
 
       <article class="gift-ticket gift-ticket--left" role="button" tabindex="0" aria-label="Open E-Kaut popup" onclick="window.__openHudPanel && window.__openHudPanel('ekaut')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.__openHudPanel && window.__openHudPanel('ekaut');}">
         <img class="gift-ticket-bg" src="assets/webview/ekaut-ticket-figma.png" alt="" aria-hidden="true" />
-        <img class="gift-ticket-bg-mobile" src="https://www.figma.com/api/mcp/asset/be2a2b65-30e7-42b1-ae52-efc6ca802c61" alt="" aria-hidden="true" />
+        <img class="gift-ticket-bg-mobile" src="assets/mobile/E-kaut.png" alt="" aria-hidden="true" />
         <h3>E-Kaut</h3>
       </article>
 
+      <img class="gift-passport-mobile" src="assets/mobile/2.png" alt="" aria-hidden="true" />
+
       <article class="gift-ticket gift-ticket--right" role="button" tabindex="0" aria-label="Open Gift List popup" onclick="window.__openHudPanel && window.__openHudPanel('gift')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.__openHudPanel && window.__openHudPanel('gift');}">
         <img class="gift-ticket-bg" src="assets/webview/15.png" alt="" aria-hidden="true" />
-        <img class="gift-ticket-bg-mobile" src="https://www.figma.com/api/mcp/asset/be2a2b65-30e7-42b1-ae52-efc6ca802c61" alt="" aria-hidden="true" />
+        <img class="gift-ticket-bg-mobile" src="assets/mobile/Gift List.png" alt="" aria-hidden="true" />
         <h3 id="giftListTicketTitle">Gift List</h3>
       </article>
-      <img class="gift-doodle-mobile gift-doodle-mobile--left" src="https://www.figma.com/api/mcp/asset/32940bc8-1fca-42dc-bdaa-f6174a364f04" alt="" aria-hidden="true" />
-      <img class="gift-doodle-mobile gift-doodle-mobile--right" src="https://www.figma.com/api/mcp/asset/cfd6a1f7-c40e-4c8e-a198-176538c12022" alt="" aria-hidden="true" />
+      <img class="gift-doodle-mobile gift-doodle-mobile--left" src="assets/webview/Vector.png" alt="" aria-hidden="true" />
+      <img class="gift-doodle-mobile gift-doodle-mobile--right" src="assets/webview/Group 29.png" alt="" aria-hidden="true" />
     </section>
 
     <section class="sec journey2" aria-label="Journey of us">
@@ -1481,25 +1562,31 @@
     </section>
 
   </main>
+  <button type="button" id="languageToggle" class="invitation-language-toggle" aria-label="Switch language to BM" title="Switch language to BM">
+    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18Zm0 0c2.4 2.2 3.8 5.4 3.8 9s-1.4 6.8-3.8 9m0-18c-2.4 2.2-3.8 5.4-3.8 9s1.4 6.8 3.8 9m-8.5-9h17M4.2 8.6h15.6M4.2 15.4h15.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span id="languageToggleLabel">EN</span>
+  </button>
 
   <nav class="web-hud" aria-label="Web Quick Navigation">
-    <button type="button" class="web-hud__item" aria-label="Call" data-panel="contact" onclick="window.__openHudPanel && window.__openHudPanel('contact')">
-      <img src="assets/mobile/hud/call.png" alt="" aria-hidden="true" />
+    <button type="button" class="web-hud__item" aria-label="Music" data-panel="ekaut" onclick="window.__openHudPanel && window.__openHudPanel('ekaut')">
+      <img src="assets/mobile/hud/music.png" alt="" aria-hidden="true" />
     </button>
     <button type="button" class="web-hud__item" aria-label="Location" data-panel="location" onclick="window.__openHudPanel && window.__openHudPanel('location')">
       <img src="assets/mobile/hud/location.png" alt="" aria-hidden="true" />
     </button>
-    <button type="button" class="web-hud__item" aria-label="Calendar" data-panel="rsvp" onclick="window.__openHudPanel && window.__openHudPanel('rsvp')">
+    <button type="button" class="web-hud__item" aria-label="Calendar" data-panel="save-date" onclick="window.__setHudActive && window.__setHudActive('save-date'); document.getElementById('save-the-date')?.scrollIntoView({behavior:'smooth'})">
       <img src="assets/mobile/hud/calendar.png" alt="" aria-hidden="true" />
     </button>
-    <button type="button" class="web-hud__item" aria-label="Profile Add" data-panel="wish" onclick="window.__openHudPanel && window.__openHudPanel('wish')">
+    <button type="button" class="web-hud__item" aria-label="RSVP" data-panel="rsvp" onclick="window.__openHudPanel && window.__openHudPanel('rsvp')">
       <img src="assets/mobile/hud/profile-add.png" alt="" aria-hidden="true" />
     </button>
     <button type="button" class="web-hud__item" aria-label="Gift" data-panel="gift" onclick="window.__openHudPanel && window.__openHudPanel('gift')">
       <img src="assets/mobile/hud/gift.png" alt="" aria-hidden="true" />
     </button>
-    <button type="button" class="web-hud__item" aria-label="Music" data-panel="ekaut" onclick="window.__openHudPanel && window.__openHudPanel('ekaut')">
-      <img src="assets/mobile/hud/music.png" alt="" aria-hidden="true" />
+    <button type="button" class="web-hud__item" aria-label="Call" data-panel="contact" onclick="window.__openHudPanel && window.__openHudPanel('contact')">
+      <img src="assets/mobile/hud/call.png" alt="" aria-hidden="true" />
     </button>
   </nav>
 
@@ -1510,10 +1597,10 @@
     <button type="button" class="mobile-hud__item" aria-label="Location" data-panel="location" onclick="window.__openHudPanel && window.__openHudPanel('location')">
       <img src="assets/mobile/hud/location.png" alt="" aria-hidden="true" />
     </button>
-    <button type="button" class="mobile-hud__item" aria-label="Calendar" data-panel="rsvp" onclick="window.__openHudPanel && window.__openHudPanel('rsvp')">
+    <button type="button" class="mobile-hud__item" aria-label="Calendar" data-panel="save-date" onclick="window.__setHudActive && window.__setHudActive('save-date'); document.getElementById('save-the-date')?.scrollIntoView({behavior:'smooth'})">
       <img src="assets/mobile/hud/calendar.png" alt="" aria-hidden="true" />
     </button>
-    <button type="button" class="mobile-hud__item" aria-label="Profile Add" data-panel="wish" onclick="window.__openHudPanel && window.__openHudPanel('wish')">
+    <button type="button" class="mobile-hud__item" aria-label="RSVP" data-panel="rsvp" onclick="window.__openHudPanel && window.__openHudPanel('rsvp')">
       <img src="assets/mobile/hud/profile-add.png" alt="" aria-hidden="true" />
     </button>
     <button type="button" class="mobile-hud__item" aria-label="Gift" data-panel="gift" onclick="window.__openHudPanel && window.__openHudPanel('gift')">
@@ -1641,7 +1728,7 @@
               <option value="8">8</option>
             </select>
           </form>
-          <button type="button" class="figma-rsvp-submit">RSVP</button>
+          <button type="button" class="figma-rsvp-submit" id="rsvpSubmitBtn">RSVP</button>
         </div>
       </section>
 
@@ -1669,7 +1756,7 @@
             <h2 id="hudPanelTitle" class="figma-gift-title">Gift List</h2>
             <div class="figma-gift-list" id="giftListContainer">
               <article class="figma-gift-row gift-row-template">
-                <div class="figma-gift-thumb-wrap"><img class="figma-gift-thumb" src="https://www.figma.com/api/mcp/asset/89a7bac3-2cb9-4a9c-8572-7fc3d62c2364" alt="" /></div>
+                <div class="figma-gift-thumb-wrap"><img class="figma-gift-thumb" src="assets/webview/1.png" alt="" /></div>
                 <div>
                   <p class="figma-gift-meta-title">Product Name</p>
                   <div class="figma-gift-pill">Contribute to This Item</div>
@@ -1677,7 +1764,7 @@
                 </div>
               </article>
               <article class="figma-gift-row">
-                <div class="figma-gift-thumb-wrap"><img class="figma-gift-thumb" src="https://www.figma.com/api/mcp/asset/89a7bac3-2cb9-4a9c-8572-7fc3d62c2364" alt="" /></div>
+                <div class="figma-gift-thumb-wrap"><img class="figma-gift-thumb" src="assets/webview/1.png" alt="" /></div>
                 <div>
                   <p class="figma-gift-meta-title">Product Name</p>
                   <div class="figma-gift-pill">Contribute to This Item</div>
@@ -1685,7 +1772,7 @@
                 </div>
               </article>
               <article class="figma-gift-row">
-                <div class="figma-gift-thumb-wrap"><img class="figma-gift-thumb" src="https://www.figma.com/api/mcp/asset/89a7bac3-2cb9-4a9c-8572-7fc3d62c2364" alt="" /></div>
+                <div class="figma-gift-thumb-wrap"><img class="figma-gift-thumb" src="assets/webview/1.png" alt="" /></div>
                 <div>
                   <p class="figma-gift-meta-title">Product Name</p>
                   <div class="figma-gift-pill">Contribute to This Item</div>
@@ -1693,7 +1780,7 @@
                 </div>
               </article>
               <article class="figma-gift-row">
-                <div class="figma-gift-thumb-wrap"><img class="figma-gift-thumb" src="https://www.figma.com/api/mcp/asset/89a7bac3-2cb9-4a9c-8572-7fc3d62c2364" alt="" /></div>
+                <div class="figma-gift-thumb-wrap"><img class="figma-gift-thumb" src="assets/webview/1.png" alt="" /></div>
                 <div>
                   <p class="figma-gift-meta-title">Product Name</p>
                   <div class="figma-gift-pill">Contribute to This Item</div>
@@ -1766,14 +1853,318 @@
       var dialog = modal ? modal.querySelector('.figma-exact-modal__dialog') : null;
       var panels = modal ? modal.querySelectorAll('[data-panel-view]') : [];
       var hudButtons = document.querySelectorAll('.mobile-hud__item[data-panel], .web-hud__item[data-panel]');
+      var languageToggle = document.getElementById('languageToggle');
+      var languageKey = 'wcLanguage';
+      var currentLanguage = (localStorage.getItem(languageKey) || 'en').toLowerCase() === 'ms' ? 'ms' : 'en';
       var lockedScrollY = 0;
-
-      window.__openHudPanel = function (panelName) {
-        if (!modal || !dialog || !panels.length) return;
-        for (var i = 0; i < panels.length; i += 1) {
-          var panel = panels[i];
-          panel.hidden = panel.getAttribute('data-panel-view') !== panelName;
+      function getApiBase() {
+        if (window.WC_API_BASE) return window.WC_API_BASE;
+        var host = String(window.location.hostname || '').toLowerCase();
+        var isLocal =
+          host === 'localhost' ||
+          host === '127.0.0.1' ||
+          host.indexOf('192.168.') === 0 ||
+          host.indexOf('10.') === 0;
+        if (isLocal) return window.location.protocol + '//' + window.location.hostname + ':3000';
+        return window.location.origin;
+      }
+      var i18n = {
+        en: {
+          weddingOf: 'THE WEDDING OF',
+          weddingReception: 'Wedding Reception',
+          heartfeltGratitude: 'With heartfelt gratitude',
+          receptionInviteHtml: "With joy and gratitude, we warmly invite<br />Dato' | Datin | Mr. | Mrs. | Sir | Madam <br />and your family to celebrate the wedding<br />of our beloved child with us.",
+          theDay: 'The Day',
+          from: 'FROM',
+          to: 'TO',
+          guestArrival: 'Guest Arrival',
+          brideGroomArrival: 'Bride & Groom Arrival',
+          formalDining: 'Formal Dining',
+          eventEnds: 'Event Ends',
+          destinationRoute: 'Destination Route',
+          saveTheDate: 'Save The Date',
+          countingTakeoff: '<span>Counting days before</span><span>the take off</span>',
+          labelDays: 'days',
+          labelHours: 'hours',
+          labelMinutes: 'minutes',
+          labelSeconds: 'seconds',
+          attireGuide: 'Attire Guide',
+          dressCode: 'Dress Code',
+          dressCodeValue: 'Formal / Traditional / Batik',
+          attireNoJeans: '( Jeans, Jersey T-shirts, and Slippers are not allowed )',
+          coloursToAvoid: 'Colours To Avoid!',
+          attireMessage: "We've reserved certain colours for the bride, groom,\nand both families.\nTo keep things special, we'd truly appreciate it\nif you could avoid these shades on our big day.",
+          navyBlue: 'Navy Blue',
+          dustyPink: 'Dusty Pink',
+          rsvpHeading: '<span>Your flight to celebration</span><span>awaits!</span><span>RSVP now!</span>',
+          rsvpLine1: 'Kindly RSVP by June 14th, 2026',
+          rsvpLine2: 'to help us with the final arrangements',
+          rsvpLine3: 'for our special day.',
+          giftHeading: 'A Cherished Gift for the Road We Will Travel',
+          giftList: 'Gift List',
+          journeyOfUs: 'Journey of Us',
+          journeyDate1: 'July 2018',
+          journeyTitle1: 'How We Met',
+          journeyDesc1: 'We first met as classmates during our Diploma years. What started as a simple introduction slowly grew into something special.',
+          journeyDate2: 'July 2018',
+          journeyTitle2: 'Our First Date',
+          journeyDesc2: 'Our first date was simple but unforgettable. We shared snacks, talked for hours, and made our first memory together.',
+          journeyDate3: '2026',
+          journeyTitle3: 'Our Big Day',
+          journeyDesc3: 'After years of growing side by side, we are ready to begin our new chapter together with all of you.',
+          wishesHeading: 'Took a part in the journey',
+          contactUs: 'Contact Us',
+          contactMessage: 'Should you require any assistance with the location or have any inquiries regarding the wedding, our family members will be delighted to assist you.',
+          weddingLocation: 'Wedding Location',
+          needHelp: 'Need Help?',
+          seeYouThere: 'See you there!',
+          rsvpName: 'Name',
+          rsvpWishes: 'Send Your Wishes!',
+          attendance: 'Attendance',
+          attend: 'Attend',
+          notAttending: 'Not Attending',
+          numberOfPax: 'Number of Pax',
+          selectPax: 'Select Pax',
+          shareBlessings: 'Share your blessings',
+          leaveWishes: 'Leave the wishes that you want to share!',
+          googleMaps: 'Google Maps',
+          waze: 'Waze',
+          contributeToThisItem: 'Contribute to This Item',
+          quickContribution: 'Quick Contribution',
+          giftPopupTitle: 'Gift List',
+          alreadyFunded: 'Already funded',
+          stillNeeded: 'Still needed',
+          youArePaying: 'You are paying',
+          contributionAmount: 'Contribution Amount ( MYR )',
+          customAmount: 'Custom Amount',
+          yourName: 'Your Name',
+          phoneNumber: 'Phone Number',
+          shortBlessing: 'Short Blessing ( Optional )'
+        },
+        ms: {
+          weddingOf: 'ISTANA KASIH DUA HATI',
+          weddingReception: 'Majlis Resepsi',
+          heartfeltGratitude: 'Dengan penuh kesyukuran',
+          receptionInviteHtml: 'Dengan penuh kesyukuran, kami menjemput<br />Dato\' | Datin | Tuan | Puan | Encik | Cik<br />serta seisi keluarga untuk meraikan perkahwinan<br />anakanda kami yang tercinta bersama-sama.',
+          theDay: 'Atur Cara',
+          from: 'DARI',
+          to: 'KE',
+          guestArrival: 'Ketibaan Tetamu',
+          brideGroomArrival: 'Ketibaan Pengantin',
+          formalDining: 'Jamuan Makan',
+          eventEnds: 'Majlis Tamat',
+          destinationRoute: 'Laluan Destinasi',
+          saveTheDate: 'Simpan Tarikh Ini',
+          countingTakeoff: '<span>Menghitung Hari </span><span>Sebelum Pelepasan</span>',
+          labelDays: 'hari',
+          labelHours: 'jam',
+          labelMinutes: 'minit',
+          labelSeconds: 'saat',
+          attireGuide: 'Panduan Pakaian',
+          dressCode: 'Kod Pakaian',
+          dressCodeValue: 'Formal / Tradisional / Batik',
+          attireNoJeans: '( Jeans, Jersi T-shirt, dan Selipar tidak dibenarkan )',
+          coloursToAvoid: 'Warna Yang Perlu Dielakkan!',
+          attireMessage: 'Kami telah menetapkan beberapa warna khas\nuntuk pengantin dan kedua-dua belah keluarga.\nBagi mengekalkan seri pada hari istimewa ini,\nkami amat menghargai jika anda dapat\nmengelakkan warna-warna berikut.',
+          navyBlue: 'Biru Navy',
+          dustyPink: 'Pink Dusty',
+          rsvpHeading: '<span>Tempah penerbangan</span><span>ke majlis kami</span><span>RSVP sekarang!</span>',
+          rsvpLine1: 'Mohon RSVP sebelum 14 Jun 2026',
+          rsvpLine2: 'bagi membantu kami membuat',
+          rsvpLine3: 'persiapan akhir untuk hari istimewa ini.',
+          giftHeading: 'Tanda Kasih Buat Kami Bersama!',
+          giftList: 'Senarai Hadiah',
+          journeyOfUs: 'Perjalanan Kami',
+          journeyDate1: 'Julai 2018',
+          journeyTitle1: 'Permulaan Kita',
+          journeyDesc1: 'Kami mula berkenalan sebagai rakan sekelas semasa zaman Diploma. Dari perkenalan ringkas, lahirlah rasa yang semakin bermakna.',
+          journeyDate2: 'Julai 2018',
+          journeyTitle2: 'Janji Temu Pertama',
+          journeyDesc2: 'Janji temu pertama kami ringkas tetapi tidak dilupakan. Kami berkongsi makanan ringan, berbual lama, dan mencipta kenangan pertama bersama.',
+          journeyDate3: '2026',
+          journeyTitle3: 'Hari Bahagia Kami',
+          journeyDesc3: 'Setelah bertahun-tahun melangkah seiring, kami bersedia memulakan lembaran baharu bersama anda semua.',
+          wishesHeading: 'Sebahagian Perjalanan',
+          contactUs: 'Hubungi Kami',
+          contactMessage: 'Sekiranya anda memerlukan bantuan berkaitan lokasi atau mempunyai sebarang pertanyaan mengenai majlis, ahli keluarga kami sedia membantu anda.',
+          weddingLocation: 'Lokasi Majlis',
+          needHelp: 'Perlukan Bantuan?',
+          seeYouThere: 'Jumpa nanti!',
+          rsvpName: 'Nama',
+          rsvpWishes: 'Titipkan Ucapan!',
+          attendance: 'Kehadiran',
+          attend: 'Hadir',
+          notAttending: 'Tidak Hadir',
+          numberOfPax: 'Bilangan Pax',
+          selectPax: 'Pilih Pax',
+          shareBlessings: 'Titipkan doa anda',
+          leaveWishes: 'Tinggalkan ucapan yang ingin anda sampaikan!',
+          googleMaps: 'Google Maps',
+          waze: 'Waze',
+          contributeToThisItem: 'Sumbang Hadiah Ini',
+          quickContribution: 'Sumbangan Pantas',
+          giftPopupTitle: 'Senarai Hadiah',
+          alreadyFunded: 'Sudah Disumbang',
+          stillNeeded: 'Masih Diperlukan',
+          youArePaying: 'Anda Bayar',
+          contributionAmount: 'Jumlah Sumbangan ( MYR )',
+          customAmount: 'Jumlah Sendiri',
+          yourName: 'Nama Anda',
+          phoneNumber: 'Nombor Telefon',
+          shortBlessing: 'Ucapan Ringkas ( Pilihan )'
         }
+      };
+
+      function setText(selector, value) {
+        var el = document.querySelector(selector);
+        if (el && typeof value === 'string') el.textContent = value;
+      }
+
+      function setHtml(selector, value) {
+        var el = document.querySelector(selector);
+        if (el && typeof value === 'string') el.innerHTML = value;
+      }
+
+      function applyLanguage(lang) {
+        currentLanguage = lang === 'ms' ? 'ms' : 'en';
+        var t = i18n[currentLanguage];
+        document.documentElement.setAttribute('lang', currentLanguage === 'ms' ? 'ms' : 'en');
+        if (languageToggle) {
+          var toggleLabel = document.getElementById('languageToggleLabel');
+          if (toggleLabel) toggleLabel.textContent = currentLanguage === 'en' ? 'EN' : 'BM';
+          languageToggle.setAttribute('aria-label', currentLanguage === 'en' ? 'Switch language to BM' : 'Tukar bahasa ke EN');
+          languageToggle.setAttribute('title', currentLanguage === 'en' ? 'Switch language to BM' : 'Tukar bahasa ke EN');
+        }
+
+        setText('.attire h2', t.attireGuide);
+        setText('#introKicker', t.weddingOf);
+        setText('.gratitude h2', t.weddingReception);
+        setText('.gratitude-kicker', t.heartfeltGratitude);
+        setHtml('.invite-line', t.receptionInviteHtml);
+        setText('#saveDateTitle', t.saveTheDate);
+        setHtml('#countdownHeadline', t.countingTakeoff);
+        setText('.labels span:nth-child(1)', t.labelDays);
+        setText('.labels span:nth-child(2)', t.labelHours);
+        setText('.labels span:nth-child(3)', t.labelMinutes);
+        setText('.labels span:nth-child(4)', t.labelSeconds);
+        setText('.day-top h2', t.theDay);
+        setText('.day-from', t.from);
+        setText('.day-to', t.to);
+        setText('.schedule-box div:nth-child(1) p', t.guestArrival);
+        setText('.schedule-box div:nth-child(2) p', t.brideGroomArrival);
+        setText('.schedule-box div:nth-child(3) p', t.formalDining);
+        setText('.schedule-box div:nth-child(4) p', t.eventEnds);
+        setText('.route h2', t.destinationRoute);
+        setText('.attire-title', t.dressCode);
+        setText('.attire-line', t.dressCodeValue);
+        setText('.attire-note', t.attireNoJeans);
+        setText('.attire-subtitle', t.coloursToAvoid);
+        var attireMessage = document.querySelector('.attire-message');
+        if (attireMessage) attireMessage.innerHTML = t.attireMessage.replace(/\n/g, '<br/>');
+        setText('.attire-colors p:nth-of-type(1)', t.navyBlue);
+        setText('.attire-colors p:nth-of-type(2)', t.dustyPink);
+
+        setHtml('.rsvp h2', t.rsvpHeading);
+        var rsvpNoteEl = document.getElementById('rsvpNote');
+        if (rsvpNoteEl) rsvpNoteEl.innerHTML = '<span>' + t.rsvpLine1 + '</span><span>' + t.rsvpLine2 + '</span><span>' + t.rsvpLine3 + '</span>';
+
+        setText('.gift h2', t.giftHeading);
+        setText('#giftListTicketTitle', t.giftList);
+        setText('.journey2 h2', t.journeyOfUs);
+        setText('.wishes h2', t.wishesHeading);
+        setText('#storyDate1', t.journeyDate1);
+        setText('#storyTitle1', t.journeyTitle1);
+        setText('#storyDesc1', t.journeyDesc1);
+        setText('#storyDate2', t.journeyDate2);
+        setText('#storyTitle2', t.journeyTitle2);
+        setText('#storyDesc2', t.journeyDesc2);
+        setText('#storyDate3', t.journeyDate3);
+        setText('#storyTitle3', t.journeyTitle3);
+        setText('#storyDesc3', t.journeyDesc3);
+        var journeySteps = document.querySelectorAll('.journey2-step');
+        if (journeySteps.length >= 3) {
+          var d1 = journeySteps[0].querySelector('.journey2-step__date'); if (d1) d1.textContent = t.journeyDate1;
+          var t1 = journeySteps[0].querySelector('.journey2-step__title'); if (t1) t1.textContent = t.journeyTitle1;
+          var p1 = journeySteps[0].querySelector('.journey2-step__desc'); if (p1) p1.textContent = t.journeyDesc1;
+          var d2 = journeySteps[1].querySelector('.journey2-step__date'); if (d2) d2.textContent = t.journeyDate2;
+          var t2 = journeySteps[1].querySelector('.journey2-step__title'); if (t2) t2.textContent = t.journeyTitle2;
+          var p2 = journeySteps[1].querySelector('.journey2-step__desc'); if (p2) p2.textContent = t.journeyDesc2;
+          var d3 = journeySteps[2].querySelector('.journey2-step__date'); if (d3) d3.textContent = t.journeyDate3;
+          var t3 = journeySteps[2].querySelector('.journey2-step__title'); if (t3) t3.textContent = t.journeyTitle3;
+          var p3 = journeySteps[2].querySelector('.journey2-step__desc'); if (p3) p3.textContent = t.journeyDesc3;
+        }
+        var journeyPhraseMap = {
+          en: {
+            'Sebuah Janji Selamanya': 'A Promise for Forever',
+            'Selepas menamatkan projek tahun akhir dan menutup bab pengajian bersama, lembaran baharu bermula perlahan-lahan. Daripada dua pelajar yang mengejar impian, kami berjanji untuk meneruskan kehidupan beriringan sebagai suami isteri.': 'After completing our final year project and closing our study chapter together, a new chapter quietly began. What started as two students chasing dreams became a promise to continue life side by side as husband and wife.',
+            'Hari Bahagia Kami': 'Our Big Day',
+            'Selepas hampir lapan tahun penuh cinta, tawa, jatuh bangun, dan sokongan, kami akhirnya memulakan selamanya bersama. Dengan hati penuh syukur, kami berdoa agar cinta ini terus mekar indah hingga ke Jannah.': 'After nearly eight years of love, laughter, growth, and support, we are finally beginning our forever together. With grateful hearts, we pray that our love continues to grow beautifully until Jannah.'
+          },
+          ms: {
+            'A Promise for Forever': 'Sebuah Janji Selamanya',
+            'After completing our final year project and closing our study chapter together, a new chapter quietly began. What started as two students chasing dreams became a promise to continue life side by side as husband and wife.': 'Selepas menamatkan projek tahun akhir dan menutup bab pengajian bersama, lembaran baharu bermula perlahan-lahan. Daripada dua pelajar yang mengejar impian, kami berjanji untuk meneruskan kehidupan beriringan sebagai suami isteri.',
+            'Our Big Day': 'Hari Bahagia Kami',
+            'After nearly eight years of love, laughter, growth, and support, we are finally beginning our forever together. With grateful hearts, we pray that our love continues to grow beautifully until Jannah.': 'Selepas hampir lapan tahun penuh cinta, tawa, jatuh bangun, dan sokongan, kami akhirnya memulakan selamanya bersama. Dengan hati penuh syukur, kami berdoa agar cinta ini terus mekar indah hingga ke Jannah.'
+          }
+        };
+        var phraseMap = journeyPhraseMap[currentLanguage] || {};
+        var journeyTitles = document.querySelectorAll('.journey2-step__title');
+        for (var jt = 0; jt < journeyTitles.length; jt += 1) {
+          var originalTitle = (journeyTitles[jt].textContent || '').trim();
+          if (phraseMap[originalTitle]) journeyTitles[jt].textContent = phraseMap[originalTitle];
+        }
+        var journeyDescs = document.querySelectorAll('.journey2-step__desc');
+        for (var jd = 0; jd < journeyDescs.length; jd += 1) {
+          var originalDesc = (journeyDescs[jd].textContent || '').trim();
+          if (phraseMap[originalDesc]) journeyDescs[jd].textContent = phraseMap[originalDesc];
+        }
+        setText('#contactSectionTitle', t.contactUs);
+        setText('#contactMessage', t.contactMessage);
+        setText('.contact button', t.contactUs);
+        setText('[data-panel-view="contact"] .figma-exact-contact-popup__title', t.needHelp);
+        setText('.figma-location-title', t.weddingLocation);
+        setText('#googleMapsBtnUrl', t.googleMaps);
+        setText('#wazeBtnUrl', t.waze);
+        setText('[data-panel-view="rsvp"] h2', t.seeYouThere);
+        setText('.figma-rsvp-label--name', t.rsvpName);
+        setText('.figma-rsvp-label--phone', t.rsvpWishes);
+        setText('.figma-rsvp-label--attendance', t.attendance);
+        setText('.figma-rsvp-form__choice[data-attendance="attending"]', t.attend);
+        setText('.figma-rsvp-form__choice[data-attendance="not_attending"]', t.notAttending);
+        setText('.figma-rsvp-label--pax', t.numberOfPax);
+        var paxOption = document.querySelector('#rsvpPax option[value=""]');
+        if (paxOption) paxOption.textContent = t.selectPax;
+        setText('[data-panel-view="wish"] h2', t.shareBlessings);
+        setText('[data-panel-view="wish"] p', t.leaveWishes);
+        setText('.figma-quick-card:nth-child(1) span', t.alreadyFunded);
+        setText('.figma-quick-card:nth-child(2) span', t.stillNeeded);
+        setText('.figma-quick-card:nth-child(3) span', t.youArePaying);
+        setText('#ekautForm .figma-ekaut-label:nth-of-type(1)', t.contributionAmount);
+        setText('.figma-ekaut-amount--custom', t.customAmount);
+        setText('#ekautForm .figma-ekaut-custom .figma-ekaut-label', t.customAmount);
+        var ekautNameLabel = document.querySelector('#ekautName') ? document.querySelector('#ekautName').closest('div')?.querySelector('.figma-ekaut-label') : null;
+        var ekautPhoneLabel = document.querySelector('#ekautPhone') ? document.querySelector('#ekautPhone').closest('div')?.querySelector('.figma-ekaut-label') : null;
+        var ekautMessageLabel = document.querySelector('#ekautMessage') ? document.querySelector('#ekautMessage').closest('div')?.querySelector('.figma-ekaut-label') : null;
+        if (ekautNameLabel) ekautNameLabel.textContent = t.yourName;
+        if (ekautPhoneLabel) ekautPhoneLabel.textContent = t.phoneNumber;
+        if (ekautMessageLabel) ekautMessageLabel.textContent = t.shortBlessing;
+
+        for (var h = 0; h < hudButtons.length; h += 1) {
+          var panel = hudButtons[h].getAttribute('data-panel');
+          if (panel === 'contact') hudButtons[h].setAttribute('aria-label', t.contactUs);
+          if (panel === 'gift') hudButtons[h].setAttribute('aria-label', t.giftList);
+        }
+
+        localStorage.setItem(languageKey, currentLanguage);
+      }
+
+      if (languageToggle) {
+        languageToggle.addEventListener('click', function () {
+          applyLanguage(currentLanguage === 'en' ? 'ms' : 'en');
+        });
+      }
+
+      window.__setHudActive = function (panelName) {
         for (var j = 0; j < hudButtons.length; j += 1) {
           var btn = hudButtons[j];
           var isActive = btn.getAttribute('data-panel') === panelName;
@@ -1784,6 +2175,15 @@
             btn.classList.toggle('web-hud__item--active', isActive);
           }
         }
+      };
+
+      window.__openHudPanel = function (panelName) {
+        if (!modal || !dialog || !panels.length) return;
+        for (var i = 0; i < panels.length; i += 1) {
+          var panel = panels[i];
+          panel.hidden = panel.getAttribute('data-panel-view') !== panelName;
+        }
+        window.__setHudActive(panelName);
         dialog.className = 'figma-exact-modal__dialog';
         if (panelName === 'rsvp') dialog.classList.add('figma-exact-modal__dialog--rsvp');
         if (panelName === 'ekaut') {
@@ -1856,6 +2256,7 @@
       window.__closeHudPanel = function () {
         if (!modal) return;
         modal.setAttribute('aria-hidden', 'true');
+        if (window.__setHudActive) window.__setHudActive('');
         document.body.classList.remove('modal-open');
         document.body.style.position = '';
         document.body.style.top = '';
@@ -1887,6 +2288,129 @@
             if (attendanceValue === 'attending') dialog.classList.add('is-attending');
             else dialog.classList.remove('is-attending');
           }
+        });
+      }
+
+      /* RSVP form submission */
+      var rsvpForm = document.getElementById('rsvpFormPopup');
+      var rsvpSubmitBtn = document.getElementById('rsvpSubmitBtn');
+
+      function getSelectedAttendance() {
+        var selected = document.querySelector('#rsvpFormPopup .figma-rsvp-form__choice.is-selected');
+        return selected ? selected.getAttribute('data-attendance') : '';
+      }
+
+      function validateRsvpForm() {
+        var attendance = getSelectedAttendance();
+        var fullName = document.getElementById('rsvpName').value.trim();
+        var phoneNumber = document.getElementById('rsvpPhone').value.trim();
+        var rsvpPaxEl = document.getElementById('rsvpPax');
+        var pax = rsvpPaxEl ? parseInt(rsvpPaxEl.value, 10) || 0 : 0;
+        var isAttending = attendance === 'attending';
+        var allFilled = fullName.length > 0 && phoneNumber.length > 0 && attendance.length > 0;
+        if (isAttending && allFilled) {
+          allFilled = pax >= 1;
+        }
+        return allFilled;
+      }
+
+      function showRsvpAlert(message, isError) {
+        var existing = document.getElementById('rsvp-alert-msg');
+        if (existing) existing.remove();
+        var alert = document.createElement('p');
+        alert.id = 'rsvp-alert-msg';
+        alert.setAttribute('role', 'alert');
+        alert.style.cssText = 'position:absolute;left:50%;bottom:40px;transform:translateX(-50%);margin:0;padding:10px 20px;border-radius:12px;font:500 14px/1.4 "Playfair Display",serif;text-align:center;max-width:500px;z-index:10;';
+        if (isError) {
+          alert.style.background = '#f8d7da';
+          alert.style.color = '#842029';
+          alert.style.border = '1px solid #f5c2c7';
+        } else {
+          alert.style.background = '#d1e7dd';
+          alert.style.color = '#0f5132';
+          alert.style.border = '1px solid #a3cfbb';
+        }
+        alert.textContent = message;
+        var rsvpPanel = document.querySelector('[data-panel-view="rsvp"] .figma-rsvp-popup');
+        if (rsvpPanel) {
+          rsvpPanel.style.position = 'relative';
+          rsvpPanel.appendChild(alert);
+        }
+        setTimeout(function () { if (alert.parentNode) alert.remove(); }, 4000);
+      }
+
+      function resetRsvpForm() {
+        var rsvpName = document.getElementById('rsvpName');
+        var rsvpPhone = document.getElementById('rsvpPhone');
+        var rsvpPax = document.getElementById('rsvpPax');
+        if (rsvpName) rsvpName.value = '';
+        if (rsvpPhone) rsvpPhone.value = '';
+        if (rsvpPax) rsvpPax.value = '';
+        var allChoices = document.querySelectorAll('#rsvpFormPopup .figma-rsvp-form__choice');
+        for (var i = 0; i < allChoices.length; i += 1) allChoices[i].classList.remove('is-selected');
+        if (dialog) dialog.classList.remove('is-attending');
+      }
+
+      var rsvpChoices = document.querySelectorAll('#rsvpFormPopup .figma-rsvp-form__choice');
+      for (var c = 0; c < rsvpChoices.length; c += 1) {
+        rsvpChoices[c].addEventListener('click', function (event) {
+          for (var r = 0; r < rsvpChoices.length; r += 1) rsvpChoices[r].classList.remove('is-selected');
+          event.currentTarget.classList.add('is-selected');
+          if (dialog && dialog.classList.contains('figma-exact-modal__dialog--rsvp')) {
+            var attendanceValue = event.currentTarget.getAttribute('data-attendance');
+            if (attendanceValue === 'attending') dialog.classList.add('is-attending');
+            else dialog.classList.remove('is-attending');
+          }
+        });
+      }
+
+      if (rsvpSubmitBtn && rsvpForm) {
+        rsvpSubmitBtn.addEventListener('click', function (event) {
+          event.preventDefault();
+
+          var attendance = getSelectedAttendance();
+          var fullName = document.getElementById('rsvpName').value.trim();
+          var phoneNumber = document.getElementById('rsvpPhone').value.trim();
+          var rsvpPaxEl = document.getElementById('rsvpPax');
+          var pax = rsvpPaxEl ? parseInt(rsvpPaxEl.value, 10) || 0 : 0;
+          var isAttending = attendance === 'attending';
+
+          if (!validateRsvpForm()) {
+            if (!fullName) { showRsvpAlert('Please enter your full name.', true); return; }
+            if (!phoneNumber) { showRsvpAlert('Please send your wishes.', true); return; }
+            if (!attendance) { showRsvpAlert('Please choose your attendance.', true); return; }
+            if (isAttending && pax < 1) { showRsvpAlert('Please select number of pax.', true); return; }
+          }
+
+          var messageText = phoneNumber;
+
+          rsvpSubmitBtn.disabled = true;
+          rsvpSubmitBtn.textContent = 'Sending...';
+
+          var API_BASE = getApiBase();
+          var PROJECT_KEY = 'haqim-myra-2026';
+
+          fetch(API_BASE + '/api/rsvp/' + encodeURIComponent(PROJECT_KEY), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fullName: fullName, phoneNumber: phoneNumber, attendance: attendance, pax: isAttending ? pax : 1, reserveInvitationFrom: '', slot: '', message: messageText })
+          })
+          .then(function (response) { return response.ok ? response.json() : response.json().then(function (d) { throw new Error(d.error || 'Unable to submit RSVP.'); }); })
+          .then(function (data) {
+            if (data && data.ok) {
+              showRsvpAlert('Your RSVP has been lovingly received.', false);
+              resetRsvpForm();
+            } else {
+              showRsvpAlert(data.error || 'Unable to submit RSVP.', true);
+            }
+          })
+          .catch(function (err) {
+            showRsvpAlert(err.message || 'Unable to submit RSVP right now.', true);
+          })
+          .finally(function () {
+            rsvpSubmitBtn.disabled = false;
+            rsvpSubmitBtn.textContent = 'RSVP';
+          });
         });
       }
 
@@ -1939,6 +2463,69 @@
         ekautCustomAmount.addEventListener('input', function () {
           selectedContributionAmount = Number(ekautCustomAmount.value || 0);
           syncQuickContributionSummary();
+        });
+      }
+
+      if (ekautSubmitBtn) {
+        ekautSubmitBtn.addEventListener('click', function () {
+          var amount = Number(selectedContributionAmount || 0);
+          var nameInput = document.getElementById('ekautName');
+          var phoneInput = document.getElementById('ekautPhone');
+          var messageInput = document.getElementById('ekautMessage');
+          var giftItemId = (quickGiftContext && quickGiftContext.id) ? quickGiftContext.id : '';
+
+          if (!amount || amount < 1) { window.alert('Please select a valid amount.'); return; }
+          if (!nameInput || !nameInput.value.trim()) { window.alert('Please enter your name.'); return; }
+          if (!phoneInput || phoneInput.value.trim().length < 8) { window.alert('Please enter a valid phone number.'); return; }
+
+          ekautSubmitBtn.disabled = true;
+          ekautSubmitBtn.textContent = 'Preparing payment...';
+
+          var API_BASE = getApiBase();
+
+          console.log('E-Kaut Submit: Starting API call');
+          console.log('E-Kaut Submit: URL = ' + API_BASE + '/api/contributions/create-bill');
+
+          fetch(API_BASE + '/api/contributions/create-bill', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contributorName: nameInput.value.trim(),
+              message: messageInput ? messageInput.value.trim() : '',
+              amount: amount,
+              phoneNumber: phoneInput.value.trim(),
+              giftItemId: giftItemId
+            })
+          })
+          .then(function (r) {
+            console.log('E-Kaut Submit: Response status = ' + r.status);
+            if (!r.ok) {
+              return r.text().then(function (text) {
+                console.error('E-Kaut Submit: Error response = ' + text);
+                try {
+                  var errData = JSON.parse(text);
+                  return Promise.reject(new Error(errData.error || 'Server error ' + r.status));
+                } catch (e) {
+                  return Promise.reject(new Error(text || 'Server error ' + r.status));
+                }
+              });
+            }
+            return r.json();
+          })
+          .then(function (data) {
+            console.log('E-Kaut Submit: Success data = ' + JSON.stringify(data));
+            if (!data) throw new Error('Empty response from server');
+            if (data.error) throw new Error(data.error);
+            if (!data.paymentUrl) throw new Error('No payment URL returned by server');
+            console.log('E-Kaut Submit: Redirecting to ' + data.paymentUrl);
+            window.location.assign(data.paymentUrl);
+          })
+          .catch(function (err) {
+            console.error('E-Kaut Submit: Catch block triggered - ' + err.message);
+            window.alert('E-Kaut Error: ' + (err.message || 'Unknown error occurred'));
+            ekautSubmitBtn.disabled = false;
+            ekautSubmitBtn.textContent = 'Continue with ' + formatMyr(amount);
+          });
         });
       }
 
@@ -2105,11 +2692,11 @@
       /* Apply admin-controlled settings from localStorage */
       (function applyAdminSettings() {
         var PROJECT_KEY = 'haqim-myra-2026';
-        var API_BASE = window.WC_API_BASE || (window.location.protocol + '//' + window.location.hostname + ':8787');
+        var API_BASE = getApiBase();
         giftUi = {
-          popupTitle: 'Gift List',
+          popupTitle: i18n[currentLanguage].giftPopupTitle,
           contributorLabel: 'Contributors Name',
-          primaryButtonText: 'Contribute to This Item',
+          primaryButtonText: i18n[currentLanguage].contributeToThisItem,
           chipLabel: 'Contributor'
         };
 
@@ -2118,10 +2705,10 @@
           var quickTitle = document.querySelector('.figma-exact-modal__dialog--contribution .figma-quick-contribution-title');
           quickGiftContext = item || null;
           if (giftIdInput) giftIdInput.value = item && item.id ? item.id : '';
-          if (quickTitle) {
-            quickTitle.textContent = item && item.title ? item.title : 'Quick Contribution';
-          }
-          window.__wcQuickGiftTitle = item && item.title ? item.title : 'Quick Contribution';
+            if (quickTitle) {
+              quickTitle.textContent = item && item.title ? item.title : i18n[currentLanguage].quickContribution;
+            }
+          window.__wcQuickGiftTitle = item && item.title ? item.title : i18n[currentLanguage].quickContribution;
           var funded = item ? Number(item.fundedAmount || 0) : 0;
           var target = item ? Number(item.targetAmount || 0) : 0;
           var remaining = Math.max(target - funded, 0);
@@ -2140,7 +2727,7 @@
           var container = document.getElementById('giftListContainer');
           if (!container) return;
 
-          var fallbackThumb = 'https://www.figma.com/api/mcp/asset/89a7bac3-2cb9-4a9c-8572-7fc3d62c2364';
+          var fallbackThumb = 'assets/webview/1.png';
           container.innerHTML = '';
 
           function maskContributorName(name) {
@@ -2191,7 +2778,7 @@
               pill = document.createElement('button');
               pill.type = 'button';
               pill.className = 'figma-gift-pill';
-              pill.textContent = 'Contribute to This Item';
+              pill.textContent = i18n[currentLanguage].contributeToThisItem;
               pill.addEventListener('click', (function (giftItem) {
                 return function () { selectGiftForContribution(giftItem); };
               })(item));
@@ -2248,6 +2835,81 @@
             article.appendChild(title);
             article.appendChild(desc);
             timeline.appendChild(article);
+          }
+        }
+
+        var wishesRotationTimer = null;
+        var wishesRotationLastKey = '';
+
+        function pickRandomWishes(list, count) {
+          var pool = list.slice();
+          for (var i = pool.length - 1; i > 0; i -= 1) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var t = pool[i];
+            pool[i] = pool[j];
+            pool[j] = t;
+          }
+          return pool.slice(0, Math.max(0, count));
+        }
+
+        function renderWishCards(container, cards) {
+          container.innerHTML = '';
+          for (var i = 0; i < cards.length; i += 1) {
+            var item = cards[i];
+            var card = document.createElement('article');
+            card.className = 'wish-card';
+
+            var title = document.createElement('h3');
+            title.textContent = String(item.name || '').trim();
+
+            var message = document.createElement('p');
+            message.textContent = String(item.message || '').trim();
+
+            card.appendChild(title);
+            card.appendChild(message);
+            container.appendChild(card);
+          }
+        }
+
+        function renderRsvpWishes(wishes) {
+          var container = document.querySelector('.wishes-left');
+          if (!container) return;
+          var list = Array.isArray(wishes) ? wishes.filter(function (w) {
+            return w && typeof w.name === 'string' && typeof w.message === 'string' && w.name.trim() && w.message.trim();
+          }) : [];
+
+          if (!list.length) return;
+          if (wishesRotationTimer) {
+            clearInterval(wishesRotationTimer);
+            wishesRotationTimer = null;
+          }
+
+          var visibleCount = Math.min(3, list.length);
+
+          function cycleWishes() {
+            var chosen = pickRandomWishes(list, visibleCount);
+            var nextKey = chosen.map(function (x) { return String(x.name || '') + '|' + String(x.message || ''); }).join('::');
+            if (list.length > visibleCount && nextKey === wishesRotationLastKey) {
+              chosen = pickRandomWishes(list, visibleCount);
+              nextKey = chosen.map(function (x) { return String(x.name || '') + '|' + String(x.message || ''); }).join('::');
+            }
+            wishesRotationLastKey = nextKey;
+            container.classList.add('wishes-left--fade');
+            setTimeout(function () {
+              renderWishCards(container, chosen);
+              container.classList.remove('wishes-left--fade');
+            }, 220);
+          }
+
+          renderWishCards(container, pickRandomWishes(list, visibleCount));
+          wishesRotationLastKey = Array.from(container.querySelectorAll('.wish-card')).map(function (card) {
+            var n = card.querySelector('h3');
+            var m = card.querySelector('p');
+            return (n ? n.textContent : '') + '|' + (m ? m.textContent : '');
+          }).join('::');
+
+          if (list.length > visibleCount) {
+            wishesRotationTimer = setInterval(cycleWishes, 5500);
           }
         }
 
@@ -2384,6 +3046,7 @@
             if (data && data.settings) {
               applySettingsObject(data.settings);
               localStorage.setItem('weddingCardSettings', JSON.stringify(data.settings));
+              applyLanguage(currentLanguage);
             }
           })
           .catch(function () {});
@@ -2399,25 +3062,23 @@
           })
           .catch(function () { renderGiftList([]); });
 
+        fetch(API_BASE + '/api/rsvp-wishes/' + encodeURIComponent(PROJECT_KEY))
+          .then(function (response) { return response.ok ? response.json() : null; })
+          .then(function (data) {
+            if (data && Array.isArray(data.wishes)) {
+              renderRsvpWishes(data.wishes);
+            }
+          })
+          .catch(function () {});
+
         var giftTicket = document.querySelector('.gift-ticket--left');
         if (giftTicket) {
           giftTicket.addEventListener('click', function () { selectGiftForContribution(null); });
         }
+
+        applyLanguage(currentLanguage);
       })();
     })();
-  </script>
+</script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
