@@ -109,7 +109,7 @@ function mapAdminGiftItems(items, contributions) {
 }
 
 function getRequestOrigin(req) {
-  const configuredBaseUrl = String(process.env.APP_BASE_URL || "").trim();
+  const configuredBaseUrl = String(process.env.APP_BASE_URL || "").trim().replace(/^["']|["']$/g, "");
   if (configuredBaseUrl) {
     return configuredBaseUrl.replace(/\/+$/, "");
   }
