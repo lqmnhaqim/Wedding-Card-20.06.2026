@@ -324,7 +324,10 @@ async function getContributionById(contributionId) {
     .select("id,contributor_name,message,amount,status,billplz_bill_id,toyyibpay_bill_code,payment_reference,created_at")
     .eq("id", contributionId)
     .single();
-  if (error) return null;
+  if (error) {
+    console.error("getContributionById - Supabase error for", contributionId, JSON.stringify(error));
+    return null;
+  }
   return data;
 }
 
@@ -564,10 +567,13 @@ app.post("/api/contributions/:projectKey/billplz-callback", express.urlencoded({
 
 app.get("/api/contributions/status/:id", async (req, res) => {
   try {
+    console.log("[status-endpoint] Request received for ID:", req.params.id);
     if (!requireDb(res)) return;
     const id = String(req.params.id || "").trim();
     if (!id) return res.status(400).json({ error: "Missing contribution id." });
+    console.log("[status-endpoint] Looking up contribution:", id);
     const contribution = await syncContributionWithBillplz(id);
+    console.log("[status-endpoint] Sync result:", contribution ? `found, status=${contribution.status}` : "not found");
     if (!contribution) return res.status(404).json({ error: "Contribution not found." });
     res.json({
       id: contribution.id,
@@ -575,7 +581,31 @@ app.get("/api/contributions/status/:id", async (req, res) => {
       paymentReference: contribution.payment_reference || null,
     });
   } catch (error) {
+    console.error("[status-endpoint] Error:", error);
     res.status(500).json({ error: error instanceof Error ? error.message : "Unable to fetch contribution status." });
+  }
+});
+
+// Debug endpoint: test Supabase query directly
+app.get("/api/debug/contribution/:id", async (req, res) => {
+  try {
+    console.log("[debug] Request for ID:", req.params.id);
+    if (!supabase) return res.status(500).json({ error: "Supabase not initialized" });
+    const id = String(req.params.id || "").trim();
+    const { data, error } = await supabase
+      .from("gift_contributions")
+      .select("*")
+      .eq("id", id)
+      .single();
+    if (error) {
+      console.error("[debug] Supabase error:", JSON.stringify(error));
+      return res.status(404).json({ error: error.message, details: error });
+    }
+    console.log("[debug] Found:", JSON.stringify(data));
+    res.json(data);
+  } catch (error) {
+    console.error("[debug] Error:", error);
+    res.status(500).json({ error: error.message });
   }
 });
 
