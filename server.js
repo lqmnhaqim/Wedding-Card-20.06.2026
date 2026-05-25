@@ -627,7 +627,9 @@ app.get("/api/debug/contribution/:id", async (req, res) => {
 
 app.get("/contribution/thank-you", async (req, res) => {
   try {
-    if (!requireDb(res)) return;
+    if (!requireDb(res)) {
+      return res.sendFile(path.join(__dirname, "thank-you.html"));
+    }
     const contributionId = String(req.query?.contributionId || req.query?.refno || "").trim();
     let contribution = contributionId ? await syncContributionWithBillplz(contributionId) : null;
 
@@ -673,43 +675,97 @@ app.get("/contribution/thank-you", async (req, res) => {
           : "Your contribution is being confirmed";
     const body =
       status === "paid"
-        ? "Your contribution has been confirmed by our system."
+        ? "Your contribution has been confirmed and will appear in our records."
         : status === "failed"
           ? "This payment was canceled or did not complete. You may return and try again."
-          : "We are waiting for payment gateway callback to finalize your status.";
+          : "We are waiting for the payment gateway to finalize your contribution. Please wait a moment.";
 
-    const html = `<!doctype html>
+    const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Contribution Status</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thank You - Wedding Gift</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Playfair+Display:wght@400;500;700&display=swap" rel="stylesheet" />
   <style>
-    body{margin:0;min-height:100vh;display:grid;place-items:center;background:#faf1e3;color:#121d6c;font-family:Arial,sans-serif}
-    .card{width:min(92vw,560px);background:#fff8ee;border:2px solid #6f8466;border-radius:16px;padding:24px}
-    h1{margin:0 0 10px;font-size:28px;line-height:1.2}
-    p{margin:8px 0;line-height:1.5}
-    .meta{font-size:14px;opacity:.9}
-    a.btn{display:inline-block;margin-top:14px;background:#121d6c;color:#faf1e3;text-decoration:none;padding:10px 16px;border-radius:999px}
+    :root { --blue: #121d6c; --paper: #fffdf6; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: var(--blue); font-family: "Playfair Display", serif; color: var(--blue);
+    }
+    .card {
+      background: rgba(255,253,246,0.96); border-radius: 24px; padding: 48px 40px;
+      max-width: 560px; width: calc(100% - 32px); text-align: center; box-shadow: 0 28px 90px rgba(0,0,0,0.34);
+    }
+    h1 { font-family: "Anton", sans-serif; font-size: 36px; line-height: 1.1; margin-bottom: 14px; }
+    p { font-size: 16px; line-height: 1.5; color: #3a3a3a; margin-bottom: 12px; }
+    .meta { font-size: 13px; color: #777; margin-top: 24px; padding-top: 20px; border-top: 1px solid #e0d6c2; }
+    .meta strong { color: var(--blue); }
+    .button {
+      display: inline-flex; align-items: center; justify-content: center;
+      height: 44px; padding: 0 28px; border: 2px solid var(--blue); border-radius: 1000px;
+      background: var(--blue); color: rgba(255,253,246,0.96);
+      font: 400 14px/1 "Playfair Display", serif; text-decoration: none;
+      margin-top: 20px; transition: opacity .18s;
+    }
+    .button:hover { opacity: 0.88; }
+    .spinner {
+      display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; margin-right: 8px; vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
   <main class="card">
-    <h1>${title}</h1>
-    <p>${body}</p>
-    ${contribution ? `<p class="meta">Contribution reference: <strong>${contribution.id}</strong></p>` : ""}
-    ${contribution?.payment_reference ? `<p class="meta">Billplz order number: <strong>${contribution.payment_reference}</strong></p>` : ""}
-    <a class="btn" href="/">Return to invitation</a>
+    <h1 id="headline">${title}</h1>
+    <p id="message">${body}</p>
+    <div id="meta" class="meta${contributionId ? "" : " hidden"}">
+      ${contribution ? `<p>Contribution reference: <strong>${contribution.id}</strong></p>` : ""}
+      ${contribution?.payment_reference ? `<p>Payment reference: <strong>${contribution.payment_reference}</strong></p>` : ""}
+    </div>
+    <a class="button" href="/">Return to invitation</a>
   </main>
   ${status === "pending" && contributionId ? `<script>
-    setInterval(async function(){
-      try{
-        const r = await fetch('/api/contributions/status/${contributionId}');
-        if(!r.ok) return;
-        const d = await r.json();
-        if(d && d.status && d.status !== 'pending'){ location.reload(); }
-      }catch(e){}
-    }, 5000);
+    (function() {
+      var contributionId = "${contributionId}";
+      var ref = "";
+      var attempts = 0;
+      var maxAttempts = 8;
+      function pollStatus() {
+        if (!contributionId) return;
+        attempts += 1;
+        fetch("/api/contributions/status/" + encodeURIComponent(contributionId))
+          .then(function(r) { return r.ok ? r.json() : null; })
+          .then(function(data) {
+            if (!data) return;
+            if (data.status === "paid" || data.status === "failed") {
+              if (data.status === "paid") {
+                document.getElementById("headline").textContent = "Thank you for your generous gift";
+                document.getElementById("message").textContent = "Your contribution has been confirmed and will appear in our records.";
+              } else {
+                document.getElementById("headline").textContent = "Payment was not completed";
+                document.getElementById("message").textContent = "This payment was canceled or did not complete. You may return to the invitation and try again.";
+              }
+              if (data.paymentReference && !ref) {
+                ref = data.paymentReference;
+                document.getElementById("meta").classList.remove("hidden");
+                document.getElementById("meta").innerHTML = '<p>Contribution reference: <strong>' + contributionId + '</strong></p><p>Payment reference: <strong>' + ref + '</strong></p>';
+              }
+              return;
+            }
+            if (attempts < maxAttempts) setTimeout(pollStatus, 3000);
+          })
+          .catch(function() {
+            if (attempts < maxAttempts) setTimeout(pollStatus, 3000);
+          });
+      }
+      pollStatus();
+    })();
   </script>` : ""}
 </body>
 </html>`;
