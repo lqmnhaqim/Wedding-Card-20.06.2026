@@ -9,6 +9,10 @@
           "index.html",
           "admin.html",
           "styles.css",
+          "thank-you.html",
+          "billplz.js",
+          "contribution-api.js",
+          "rate-limit.js",
           "assets/**"
         ]
       }
