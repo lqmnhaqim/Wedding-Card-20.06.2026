@@ -531,18 +531,26 @@ app.post("/api/contributions/:projectKey/checkout", async (req, res) => {
 
 app.post("/api/contributions/:projectKey/billplz-callback", express.urlencoded({ extended: false }), async (req, res) => {
   try {
+    console.log("[billplz-callback] Request body:", JSON.stringify(req.body));
+    console.log("[billplz-callback] Query:", JSON.stringify(req.query));
     if (!requireDb(res)) return;
     const contributionId = String(req.query?.contributionId || "").trim();
     if (!contributionId) return res.status(400).send("Missing contributionId.");
     const fields = req.body || {};
-    if (!verifyBillplzSignature(fields)) return res.status(401).send("Invalid signature.");
+    console.log("[billplz-callback] Signature key configured:", Boolean(process.env.BILLPLZ_X_SIGNATURE_KEY));
+    console.log("[billplz-callback] x_signature present:", Boolean(fields.x_signature));
+    const sigValid = verifyBillplzSignature(fields);
+    console.log("[billplz-callback] Signature valid:", sigValid);
+    if (!sigValid) return res.status(401).send("Invalid signature.");
 
     const paidRaw = String(fields.paid ?? "").toLowerCase();
     const stateRaw = String(fields.state ?? "").toLowerCase();
     const billId = String(fields.id ?? "").trim();
     const txId = String(fields.transaction_id ?? "").trim();
     const normalizedStatus = normalizeGatewayStatus(paidRaw === "true" ? "paid" : stateRaw || paidRaw);
+    console.log("[billplz-callback] Bill ID:", billId, "- Normalized status:", normalizedStatus);
     const current = await getContributionById(contributionId);
+    console.log("[billplz-callback] Contribution lookup result:", current ? "found" : "not found");
     if (!current) return res.status(404).send("Contribution not found.");
     const currentBillId = current.billplz_bill_id || current.toyyibpay_bill_code;
     if (currentBillId && billId && currentBillId !== billId) return res.status(409).send("Bill reference mismatch.");
