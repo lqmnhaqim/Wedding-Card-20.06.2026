@@ -321,7 +321,7 @@ async function getContributionById(contributionId) {
   if (!contributionId) return null;
   const { data, error } = await supabase
     .from("gift_contributions")
-    .select("id,contributor_name,message,amount,status,billplz_bill_id,toyyibpay_bill_code,payment_reference,created_at")
+    .select("*")
     .eq("id", contributionId)
     .single();
   if (error) {
@@ -363,41 +363,59 @@ async function resolveBillplzTransactionReference(billId, fallbackReference, nor
 }
 
 async function syncContributionWithBillplz(contributionId) {
+  console.log("[sync] Starting sync for:", contributionId);
+  console.log("[sync] Supabase client exists:", Boolean(supabase));
+  
   const contribution = await getContributionById(contributionId);
+  console.log("[sync] getContributionById returned:", contribution ? `found ${contribution.contributor_name}` : "null");
+  
   if (!contribution) return null;
   const billId = contribution.billplz_bill_id || contribution.toyyibpay_bill_code;
+  console.log("[sync] Bill ID to check:", billId || "none");
+  
   if (!billId) {
-    console.log("syncContributionWithBillplz - No billId for contribution:", contributionId);
+    console.log("[sync] No billId for contribution:", contributionId);
     return contribution;
   }
-  console.log("syncContributionWithBillplz - Checking bill:", billId);
+  
+  console.log("[sync] Checking Billplz bill:", billId);
+  console.log("[sync] Billplz sandbox:", isSandbox);
+  
   try {
     const remote = await getBillplzBillStatus(billId);
-    console.log("syncContributionWithBillplz - Remote response:", remote ? JSON.stringify(remote) : "null");
+    console.log("[sync] Remote response:", remote ? JSON.stringify(remote) : "null");
+    
     if (!remote) return contribution;
     const remotePaid = remote.paid === true || remote.paid === "true";
     const remoteState = remote.state ? String(remote.state).toLowerCase() : "unknown";
-    console.log("syncContributionWithBillplz - paid:", remotePaid, "- state:", remoteState);
+    console.log("[sync] paid:", remotePaid, "- state:", remoteState);
+    
     const normalizedStatus = remotePaid ? "paid" : normalizeGatewayStatus(remoteState);
-    console.log("syncContributionWithBillplz - Final normalized status:", normalizedStatus);
+    console.log("[sync] Normalized status:", normalizedStatus);
+    
     const paymentReference = await resolveBillplzTransactionReference(
       billId,
       String(remote.transaction_id ?? contribution.payment_reference ?? ""),
       normalizedStatus
     );
+    
     if (
       normalizedStatus === contribution.status &&
       paymentReference === String(contribution.payment_reference ?? "")
     ) {
+      console.log("[sync] No change needed, returning existing");
       return contribution;
     }
+    
     await updateContributionStatus(contribution.id, normalizedStatus, billId, paymentReference);
     if (normalizedStatus !== contribution.status && (normalizedStatus === "paid" || normalizedStatus === "failed")) {
       await sendTelegramNotification(formatContributionTelegramMessage(contribution, normalizedStatus, paymentReference)).catch(() => null);
     }
-    return await getContributionById(contribution.id);
+    const updated = await getContributionById(contribution.id);
+    console.log("[sync] After update, status:", updated?.status);
+    return updated;
   } catch (e) {
-    console.error("syncContributionWithBillplz error:", e.message);
+    console.error("[sync] Error:", e.message, e.stack);
     return contribution;
   }
 }
@@ -567,21 +585,19 @@ app.post("/api/contributions/:projectKey/billplz-callback", express.urlencoded({
 
 app.get("/api/contributions/status/:id", async (req, res) => {
   try {
-    console.log("[status-endpoint] Request received for ID:", req.params.id);
+    console.log("[status] Request received, ID:", req.params.id);
     if (!requireDb(res)) return;
     const id = String(req.params.id || "").trim();
     if (!id) return res.status(400).json({ error: "Missing contribution id." });
-    console.log("[status-endpoint] Looking up contribution:", id);
-    const contribution = await syncContributionWithBillplz(id);
-    console.log("[status-endpoint] Sync result:", contribution ? `found, status=${contribution.status}` : "not found");
-    if (!contribution) return res.status(404).json({ error: "Contribution not found." });
+    const result = await syncContributionWithBillplz(id);
+    if (!result) return res.status(404).json({ error: "Contribution not found." });
     res.json({
-      id: contribution.id,
-      status: contribution.status,
-      paymentReference: contribution.payment_reference || null,
+      id: result.id,
+      status: result.status,
+      paymentReference: result.payment_reference || null,
     });
   } catch (error) {
-    console.error("[status-endpoint] Error:", error);
+    console.error("[status] Error:", error);
     res.status(500).json({ error: error instanceof Error ? error.message : "Unable to fetch contribution status." });
   }
 });
