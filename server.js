@@ -755,6 +755,7 @@ registerRsvpRoutes(app);
 
 app.post("/api/contribution-sync", express.text({ type: "*/*" }), async (req, res) => {
   try {
+    console.log("[sync] hit, body:", String(req.body || "").slice(0, 100));
     if (!requireDb(res)) return;
     const bodyText = String(req.body || "");
     let contributionId, billplzId, billplzPaid;
