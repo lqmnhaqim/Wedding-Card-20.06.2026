@@ -230,8 +230,8 @@ function verifyBillplzSignature(fields) {
   const source = Object.entries(fields)
     .filter(([key]) => key !== "x_signature")
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([, value]) => value ?? "")
-    .join("|");
+    .map(([key, value]) => `${key}${value ?? ""}`)
+    .join("");
 
   const computed = crypto.createHmac("sha256", xSignatureKey).update(source).digest("hex").toLowerCase();
   try {
