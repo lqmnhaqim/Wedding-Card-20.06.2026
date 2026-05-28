@@ -55,6 +55,8 @@
       var params = new URLSearchParams(window.location.search);
       var contributionId = params.get("contributionId") || params.get("refno") || "";
       var initialStatus = params.get("status") || "";
+      var billplzPaid = params.get("billplz[paid]") || "";
+      var billplzId = params.get("billplz[id]") || "";
       var headline = document.getElementById("headline");
       var message = document.getElementById("message");
       var meta = document.getElementById("meta");
@@ -67,29 +69,38 @@
         contribRef.textContent = contributionId;
       }
 
-      function showState(finalStatus) {
-        if (finalStatus === "paid") {
-          headline.textContent = "Blessing Fund";
-          message.innerHTML = "Thank you for your generous gift<br><small style='color:#888'>Your contribution has been confirmed by our system and will appear in the admin dashboard.</small>";
-        } else if (finalStatus === "failed") {
-          headline.textContent = "Payment was not completed";
-          message.textContent = "This payment was canceled or did not complete. You may return to the invitation and try again.";
-        } else {
-          headline.textContent = "Your contribution is being confirmed";
-          message.innerHTML = '<span class="spinner"></span> We are waiting for the payment gateway callback...';
-          return false;
+      function showPaid(billOrderNo) {
+        headline.textContent = "Blessing Fund";
+        message.innerHTML = "Thank you for your generous gift<br><small style='color:#888'>Your contribution has been confirmed by our system and will appear in the admin dashboard.</small>";
+        if (billOrderNo) {
+          orderRef.textContent = billOrderNo;
+          orderRefLine.style.display = "";
         }
-        return true;
       }
 
-      if (initialStatus === "completed" || initialStatus === "paid" || initialStatus === "success") {
+      function showState(finalStatus) {
+        if (finalStatus === "paid") { showPaid(billplzId); return true; }
+        if (finalStatus === "failed") {
+          headline.textContent = "Payment was not completed";
+          message.textContent = "This payment was canceled or did not complete. You may return to the invitation and try again.";
+          return true;
+        }
+        headline.textContent = "Your contribution is being confirmed";
+        message.innerHTML = '<span class="spinner"></span> We are waiting for the payment gateway callback...';
+        return false;
+      }
+
+      // Billplz redirect confirmed payment immediately
+      if (billplzPaid === "true" && billplzId) {
+        showPaid(billplzId);
+      } else if (initialStatus === "completed" || initialStatus === "paid" || initialStatus === "success") {
         showState("paid");
       } else if (initialStatus === "failed" || initialStatus === "cancelled") {
         showState("failed");
       } else {
         var attempts = 0;
         var maxAttempts = 15;
-        var billIdShown = false;
+        var billIdShown = Boolean(billplzId);
         function pollStatus() {
           if (!contributionId) return;
           attempts += 1;
