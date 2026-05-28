@@ -14,16 +14,20 @@ function escapeTelegramHtml(value) {
 
 async function sendTelegramNotification(message) {
   const enabled = process.env.TELEGRAM_ENABLED !== "false";
+  console.log("[Telegram] enabled:", enabled);
   if (!enabled) return;
   const botToken = String(process.env.TELEGRAM_BOT_TOKEN || "").trim();
   const chatId = String(process.env.TELEGRAM_CHAT_ID || "").trim();
+  console.log("[Telegram] bot token configured:", Boolean(botToken), "chat ID configured:", Boolean(chatId));
   if (!botToken || !chatId) return;
   const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: "HTML" }),
   });
-  if (!res.ok) console.error("Telegram send failed:", await res.text().catch(() => ""));
+  const tgBody = await res.text().catch(() => "");
+  console.log("[Telegram] response status:", res.status, "body:", tgBody.slice(0, 200));
+  if (!res.ok) console.error("Telegram send failed:", tgBody);
 }
 
 async function formatContributionTelegramMessage(contribution, status, paymentReference, supabase) {
@@ -242,8 +246,12 @@ export async function contributionWebhook(req, res) {
     if (updateErr) console.error("Failed to update contribution status:", updateErr);
 
     if (normalizedStatus !== contribution.status && (normalizedStatus === "paid" || normalizedStatus === "failed")) {
+      console.log("[Webhook] Status changed:", contribution.status, "→", normalizedStatus, ". Sending Telegram notification...");
       const contributionMsg = await formatContributionTelegramMessage(contribution, normalizedStatus, resolvedRef, supabase);
+      console.log("[Webhook] Notification message:", contributionMsg.slice(0, 100));
       await sendTelegramNotification(contributionMsg).catch(() => null);
+    } else {
+      console.log("[Webhook] No status change or not paid/failed. Old:", contribution.status, "New:", normalizedStatus);
     }
 
     return res.json({ success: true });
