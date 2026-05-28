@@ -560,8 +560,8 @@
         return window.location.origin;
       }
       function getCsrfToken() {
-        var meta = document.querySelector('meta[name="csrf-token"]');
-        return meta ? meta.getAttribute('content') || '' : '';
+        var match = document.cookie.match(/wc_csrf_token=([^;\s]+)/);
+        return match ? decodeURIComponent(match[1]) : '';
       }
       var i18n = {
         en: {

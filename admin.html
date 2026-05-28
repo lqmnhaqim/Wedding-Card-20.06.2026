@@ -255,8 +255,8 @@ Wilayah Persekutuan Putrajaya</textarea>
       var adminContent = document.getElementById('adminContent');
 
       function getCsrfToken() {
-        var meta = document.querySelector('meta[name="csrf-token"]');
-        return meta ? meta.getAttribute('content') || '' : '';
+        var match = document.cookie.match(/wc_csrf_token=([^;\s]+)/);
+        return match ? decodeURIComponent(match[1]) : '';
       }
 
       function hideLoginOverlay() {

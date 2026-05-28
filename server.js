@@ -1,6 +1,5 @@
 import "dotenv/config";
 import express from "express";
-import { readFileSync } from "node:fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createClient } from "@supabase/supabase-js";
@@ -667,7 +666,7 @@ function attachCsrfCookie(req, res, next) {
   const existingToken = req.cookies?.[getCsrfCookieName()];
   const token = existingToken && validateCsrfTokenFormat(existingToken) ? existingToken : generateCsrfToken();
   res.cookie(getCsrfCookieName(), token, {
-    httpOnly: true,
+    httpOnly: false,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
     path: "/",
@@ -697,20 +696,12 @@ function ensureTrustedWriteOrigin(req, res, next) {
   next();
 }
 
-function sendHtmlWithCsrf(res, filePath, csrfToken) {
-  const html = readFileSync(filePath, "utf8").replace(
-    '<meta name="csrf-token" content=""',
-    `<meta name="csrf-token" content="${csrfToken}"`
-  );
-  res.type("html").send(html);
-}
-
-app.get("/", attachCsrfCookie, (req, res) => {
-  sendHtmlWithCsrf(res, path.join(__dirname, "index.html"), req.cookies?.[getCsrfCookieName()] || generateCsrfToken());
+app.get("/", attachCsrfCookie, (_req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
 });
 
-app.get("/thank-you", attachCsrfCookie, (req, res) => {
-  sendHtmlWithCsrf(res, path.join(__dirname, "thank-you.html"), req.cookies?.[getCsrfCookieName()] || generateCsrfToken());
+app.get("/thank-you", attachCsrfCookie, (_req, res) => {
+  res.sendFile(path.join(__dirname, "thank-you.html"));
 });
 
 app.post("/api/contributions/create-bill", async (req, res) => {
@@ -724,9 +715,9 @@ app.post("/api/contributions/webhook", express.urlencoded({ extended: false, typ
   return contributionWebhook(req, res);
 });
 
-app.get("/admin", basicAuthRequired, attachCsrfCookie, (req, res) => {
+app.get("/admin", basicAuthRequired, attachCsrfCookie, (_req, res) => {
   res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
-  sendHtmlWithCsrf(res, path.join(__dirname, "admin.html"), req.cookies?.[getCsrfCookieName()] || generateCsrfToken());
+  res.sendFile(path.join(__dirname, "admin.html"));
 });
 
 function verifyAdminToken(req, res, next) {
