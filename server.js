@@ -468,6 +468,7 @@ app.use(cookieParser());
 app.use((req, res, next) => {
   if (req.method !== "POST" && req.method !== "PUT" && req.method !== "DELETE") return next();
   if (req.path === "/api/contributions/webhook") return next();
+  if (req.path === "/api/contributions/sync") return next();
   if (req.path.endsWith("/billplz-callback")) return next();
   return verifyCsrfToken(req, res, next);
 });
