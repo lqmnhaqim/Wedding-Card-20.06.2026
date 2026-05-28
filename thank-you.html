@@ -90,14 +90,22 @@
         return false;
       }
 
-      // Billplz redirect confirmed payment — sync & show immediately
+      // Billplz redirect confirmed payment — show immediately & poll for DB sync
       if (billplzPaid === "true" && billplzId) {
         showPaid(billplzId);
-        fetch("/api/contribution-sync", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ contributionId: contributionId, billplzId: billplzId, billplzPaid: "true" }),
-        }).catch(function() {});
+        // Poll status API which syncs with Billplz and triggers notification
+        var syncAttempts = 0;
+        function syncAndNotify() {
+          syncAttempts += 1;
+          fetch("/api/contributions/status/" + encodeURIComponent(contributionId))
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(data) {
+              if (data && data.status === "paid") { return; }
+              if (syncAttempts < 5) setTimeout(syncAndNotify, 3000);
+            })
+            .catch(function() {});
+        }
+        syncAndNotify();
       } else if (initialStatus === "completed" || initialStatus === "paid" || initialStatus === "success") {
         showState("paid");
       } else if (initialStatus === "failed" || initialStatus === "cancelled") {
