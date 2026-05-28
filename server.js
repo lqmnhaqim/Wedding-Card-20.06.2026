@@ -873,7 +873,9 @@ app.post("/api/contributions/sync", async (req, res) => {
     const { contributionId, billplzId, billplzPaid } = req.body || {};
     if (!contributionId) return res.status(400).json({ error: "Missing contributionId." });
 
+    console.log("[sync] Looking up contribution:", contributionId);
     const contribution = await getContributionById(contributionId);
+    console.log("[sync] Found:", Boolean(contribution), "status:", contribution?.status);
     if (!contribution) return res.status(404).json({ error: "Contribution not found." });
 
     const alreadyPaid = contribution.status === "paid" || contribution.status === "success" || contribution.status === "completed";
