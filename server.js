@@ -753,18 +753,11 @@ app.get("/api/health", (_req, res) => {
 
 registerRsvpRoutes(app);
 
-app.post("/api/contribution-sync", express.text({ type: "*/*" }), async (req, res) => {
+app.post("/api/contribution-sync", async (req, res) => {
   try {
-    console.log("[sync] hit, body:", String(req.body || "").slice(0, 100));
+    console.log("[sync] hit, body type:", typeof req.body, "keys:", Object.keys(req.body || {}));
     if (!requireDb(res)) return;
-    const bodyText = String(req.body || "");
-    let contributionId, billplzId, billplzPaid;
-    try {
-      const parsed = JSON.parse(bodyText);
-      contributionId = parsed.contributionId;
-      billplzId = parsed.billplzId;
-      billplzPaid = parsed.billplzPaid;
-    } catch {return res.status(400).json({ error: "Invalid JSON body." });}
+    const { contributionId, billplzId, billplzPaid } = req.body || {};
     if (!contributionId) return res.status(400).json({ error: "Missing contributionId." });
     const contribution = await getContributionById(contributionId);
     if (!contribution) return res.status(404).json({ error: "Contribution not found." });
