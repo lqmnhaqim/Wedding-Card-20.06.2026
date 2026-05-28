@@ -12,6 +12,63 @@ function escapeTelegramHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (ch) => map[ch]);
 }
 
+async function sendTelegramNotification(message) {
+  const enabled = process.env.TELEGRAM_ENABLED !== "false";
+  if (!enabled) return;
+  const botToken = String(process.env.TELEGRAM_BOT_TOKEN || "").trim();
+  const chatId = String(process.env.TELEGRAM_CHAT_ID || "").trim();
+  if (!botToken || !chatId) return;
+  const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: "HTML" }),
+  });
+  if (!res.ok) console.error("Telegram send failed:", await res.text().catch(() => ""));
+}
+
+async function formatContributionTelegramMessage(contribution, status, paymentReference, supabase) {
+  const isPaid = status === "paid";
+  const name = escapeTelegramHtml(contribution?.contributor_name ?? "Guest");
+  const amount = escapeTelegramHtml(String(contribution?.amount ?? "-"));
+  const orderNo = escapeTelegramHtml(paymentReference || "-");
+
+  let giftBlock = "";
+  const giftItemId = contribution?.gift_item_id;
+  if (giftItemId && isPaid) {
+    try {
+      const { data: gift } = await supabase.from("gift_items").select("title,target_amount").eq("id", giftItemId).single();
+      if (gift) {
+        const { data: paidRows } = await supabase.from("gift_contributions").select("amount").eq("gift_item_id", giftItemId).in("status", ["paid", "success", "completed"]);
+        const fundedNow = (paidRows || []).reduce((s, r) => s + Number(r.amount || 0), 0);
+        const target = Number(gift.target_amount || 0);
+        const progressPct = target > 0 ? Math.min(Math.round((fundedNow / target) * 10), 10) : 0;
+        const bar = "\u2593".repeat(progressPct) + "\u2591".repeat(10 - progressPct);
+        giftBlock = `\n🎁 <b>Gift</b>: ${escapeTelegramHtml(gift.title)}\n📊 <b>Progress</b>: <code>${bar}</code> RM ${fundedNow} / RM ${target}\n`;
+      }
+    } catch (_) { /* best effort */ }
+  }
+
+  if (isPaid) {
+    return (
+      `✅ <b>Payment Received!</b>\n` +
+      `━━━━━━━━━━━━━━━━\n` +
+      `👤 <b>Name</b>: ${name}\n` +
+      `💵 <b>Amount</b>: RM ${amount}\n` +
+      giftBlock +
+      `🔢 <b>Order</b>: <code>${orderNo}</code>\n` +
+      `━━━━━━━━━━━━━━━━`
+    );
+  }
+  return (
+    `❌ <b>Payment Failed</b>\n` +
+    `━━━━━━━━━━━━━━━━\n` +
+    `👤 <b>Name</b>: ${name}\n` +
+    `💵 <b>Amount</b>: RM ${amount}\n` +
+    `🔢 <b>Order</b>: <code>${orderNo}</code>\n` +
+    `━━━━━━━━━━━━━━━━`
+  );
+}
+
 function checkDedup(clientId) {
   const now = Date.now();
   const existing = dupCache.get(clientId);
@@ -183,6 +240,11 @@ export async function contributionWebhook(req, res) {
       .update({ status: normalizedStatus, payment_reference: resolvedRef })
       .eq("id", contributionId);
     if (updateErr) console.error("Failed to update contribution status:", updateErr);
+
+    if (normalizedStatus !== contribution.status && (normalizedStatus === "paid" || normalizedStatus === "failed")) {
+      const contributionMsg = await formatContributionTelegramMessage(contribution, normalizedStatus, resolvedRef, supabase);
+      await sendTelegramNotification(contributionMsg).catch(() => null);
+    }
 
     return res.json({ success: true });
   } catch (error) {
