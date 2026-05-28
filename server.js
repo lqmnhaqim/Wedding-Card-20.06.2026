@@ -753,6 +753,31 @@ app.get("/api/health", (_req, res) => {
 
 registerRsvpRoutes(app);
 
+app.post("/api/contributions/sync", async (req, res) => {
+  try {
+    if (!requireDb(res)) return;
+    const { contributionId, billplzId, billplzPaid } = req.body || {};
+    if (!contributionId) return res.status(400).json({ error: "Missing contributionId." });
+    const contribution = await getContributionById(contributionId);
+    if (!contribution) return res.status(404).json({ error: "Contribution not found." });
+    const alreadyPaid = contribution.status === "paid" || contribution.status === "success" || contribution.status === "completed";
+    if (!alreadyPaid && billplzPaid === "true") {
+      await supabase.from("gift_contributions").update({ status: "paid", billplz_bill_id: billplzId || contribution.billplz_bill_id }).eq("id", contributionId);
+      const updated = await getContributionById(contributionId);
+      if (updated) {
+        const { sendTelegramNotification, formatContributionTelegramMessage } = await import("./contribution-api.js");
+        const msg = await formatContributionTelegramMessage(updated, "paid", updated.payment_reference || "", supabase);
+        await sendTelegramNotification(msg).catch(() => null);
+      }
+    }
+    const final = await getContributionById(contributionId);
+    res.json({ status: final?.status || "pending", billplzOrderNo: final?.billplz_bill_id || null, paymentReference: final?.payment_reference || null });
+  } catch (error) {
+    console.error("[sync] Error:", error);
+    res.status(500).json({ error: "Sync failed." });
+  }
+});
+
 app.post("/api/contributions/:projectKey/checkout", async (req, res) => {
   try {
     if (!requireDb(res)) return;
@@ -864,45 +889,6 @@ app.post("/api/contributions/:projectKey/billplz-callback", express.urlencoded({
     res.status(200).send("OK");
   } catch (error) {
     res.status(500).send(error instanceof Error ? error.message : "Callback failed.");
-  }
-});
-
-app.post("/api/contributions/sync", async (req, res) => {
-  try {
-    if (!requireDb(res)) return;
-    const { contributionId, billplzId, billplzPaid } = req.body || {};
-    if (!contributionId) return res.status(400).json({ error: "Missing contributionId." });
-
-    console.log("[sync] Looking up contribution:", contributionId);
-    const contribution = await getContributionById(contributionId);
-    console.log("[sync] Found:", Boolean(contribution), "status:", contribution?.status);
-    if (!contribution) return res.status(404).json({ error: "Contribution not found." });
-
-    const alreadyPaid = contribution.status === "paid" || contribution.status === "success" || contribution.status === "completed";
-
-    if (!alreadyPaid && billplzPaid === "true") {
-      await supabase.from("gift_contributions").update({
-        status: "paid",
-        billplz_bill_id: billplzId || contribution.billplz_bill_id,
-      }).eq("id", contributionId);
-
-      const updated = await getContributionById(contributionId);
-      if (updated) {
-        const { sendTelegramNotification, formatContributionTelegramMessage } = await import("./contribution-api.js");
-        const msg = await formatContributionTelegramMessage(updated, "paid", updated.payment_reference || "", supabase);
-        await sendTelegramNotification(msg).catch(() => null);
-      }
-    }
-
-    const final = await getContributionById(contributionId);
-    res.json({
-      status: final?.status || "pending",
-      billplzOrderNo: final?.billplz_bill_id || null,
-      paymentReference: final?.payment_reference || null,
-    });
-  } catch (error) {
-    console.error("[sync] Error:", error);
-    res.status(500).json({ error: "Sync failed." });
   }
 });
 
