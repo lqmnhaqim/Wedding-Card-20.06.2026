@@ -753,6 +753,10 @@ app.get("/api/health", (_req, res) => {
 
 registerRsvpRoutes(app);
 
+app.get("/api/contribution-sync-test", (_req, res) => {
+  res.json({ ok: true });
+});
+
 app.post("/api/contribution-sync", async (req, res) => {
   try {
     console.log("[sync] hit, body type:", typeof req.body, "keys:", Object.keys(req.body || {}));
