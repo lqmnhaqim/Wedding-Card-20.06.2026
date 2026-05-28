@@ -10,11 +10,15 @@
         "includeFiles": [
           "index.html",
           "admin.html",
+          "admin.css",
+          "invitation.css",
           "styles.css",
           "thank-you.html",
           "billplz.js",
           "contribution-api.js",
           "rate-limit.js",
+          "routes/**",
+          "lib/**",
           "assets/**"
         ]
       }

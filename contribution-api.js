@@ -1,29 +1,70 @@
-import { consumeRateLimit } from "./rate-limit.js";
+import { consumeRateLimitSync } from "./rate-limit.js";
+import { z } from "zod";
 
 const RATE_LIMIT_MAX = 10;
 const RATE_LIMIT_WINDOW = 10 * 60 * 1000;
 
+const dupCache = new Map();
+const DUP_WINDOW_MS = 10_000;
+
+function escapeTelegramHtml(value) {
+  const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+  return String(value ?? "").replace(/[&<>"']/g, (ch) => map[ch]);
+}
+
+function checkDedup(clientId) {
+  const now = Date.now();
+  const existing = dupCache.get(clientId);
+  if (existing && now - existing < DUP_WINDOW_MS) return false;
+  dupCache.set(clientId, now);
+  return true;
+}
+
+setInterval(() => {
+  const cutoff = Date.now() - DUP_WINDOW_MS;
+  for (const [k, v] of dupCache) { if (v < cutoff) dupCache.delete(k); }
+}, 30_000);
+
+function sanitizeError(error) {
+  if (error instanceof z.ZodError) {
+    const issues = error.issues || error.errors || [];
+    return issues.map(e => `${(e.path || []).join(".")}: ${e.message}`).join("; ");
+  }
+  if (error instanceof Error) {
+    const msg = error.message;
+    if (msg.includes("Please enter") || msg.includes("must be") ||
+        msg.includes("required") || msg.includes("Unable to") ||
+        msg.includes("This gift has") || msg.includes("remaining") ||
+        msg.includes("fully funded") || msg.includes("Valid")) {
+      return msg;
+    }
+  }
+  return "An unexpected error occurred. Please try again later.";
+}
+
+const contributionBodySchema = z.object({
+  contributorName: z.string().min(2, "Name must be at least 2 characters."),
+  message: z.string().optional().default(""),
+  amount: z.number().min(1, "Amount must be at least RM 1.").max(100000, "Amount cannot exceed RM 100,000."),
+  email: z.string().optional().default(""),
+  phoneNumber: z.string().min(6, "Valid phone number required."),
+  giftItemId: z.string().optional(),
+});
+
 export async function createContributionBill(req, res) {
   try {
     const clientIp = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.socket.remoteAddress || "unknown";
-    const rl = consumeRateLimit(`contribution:${clientIp}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW);
+    const rl = await consumeRateLimitSync(`contribution:${clientIp}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW);
     if (!rl.ok) {
       return res.status(429).json({ error: "Too many contribution attempts. Please try again shortly." });
     }
 
-    const { contributorName, message, amount, email, phoneNumber, giftItemId } = req.body || {};
-    if (!contributorName || contributorName.length < 2) {
-      return res.status(400).json({ error: "Name must be at least 2 characters." });
+    const dedupKey = `${clientIp}:${Math.floor(Date.now() / DUP_WINDOW_MS)}`;
+    if (!checkDedup(dedupKey)) {
+      return res.status(429).json({ error: "Duplicate contribution detected. Please wait before trying again." });
     }
-    if (!amount || !Number.isFinite(Number(amount)) || Number(amount) < 1) {
-      return res.status(400).json({ error: "Amount must be at least RM 1." });
-    }
-    if (Number(amount) > 100000) {
-      return res.status(400).json({ error: "Amount cannot exceed RM 100,000." });
-    }
-    if (!phoneNumber || String(phoneNumber).trim().length < 8) {
-      return res.status(400).json({ error: "Valid phone number required." });
-    }
+
+    const { contributorName, message, amount, email, phoneNumber, giftItemId } = contributionBodySchema.parse(req.body || {});
 
     const { createBillplzBill } = await import("./billplz.js");
     const supabase = req.app.get("supabase");
@@ -31,9 +72,11 @@ export async function createContributionBill(req, res) {
 
     let giftTitle = "";
     if (giftItemId) {
-      const { data: giftItem } = await supabase.from("gift_items").select("id,title,target_amount,funded_amount").eq("id", giftItemId).single();
+      const { data: giftItem } = await supabase.from("gift_items").select("id,title,target_amount").eq("id", giftItemId).single();
       if (!giftItem) return res.status(404).json({ error: "Gift item not found." });
-      const remaining = Math.max(Number(giftItem.target_amount || 0) - Number(giftItem.funded_amount || 0), 0);
+      const { data: paidRows } = await supabase.from("gift_contributions").select("amount").eq("gift_item_id", giftItemId).in("status", ["paid", "success", "completed"]);
+      const fundedAmount = (paidRows || []).reduce((s, r) => s + Number(r.amount || 0), 0);
+      const remaining = Math.max(Number(giftItem.target_amount || 0) - fundedAmount, 0);
       if (remaining <= 0) return res.status(400).json({ error: "This gift has already been fully funded." });
       if (Number(amount) > remaining) return res.status(400).json({ error: `This gift has only RM ${remaining.toFixed(0)} remaining.` });
       giftTitle = giftItem.title;
@@ -56,7 +99,9 @@ export async function createContributionBill(req, res) {
       throw insertErr || new Error("Failed to create contribution record.");
     }
 
-    const origin = `${req.protocol}://${req.get("host")}`;
+    const origin = req.app.get("getOrigin")
+      ? req.app.get("getOrigin")(req)
+      : `${req.protocol}://${req.get("host")}`;
     const billDescription = giftTitle ? `Wedding Gift - ${giftTitle} (${draft.id})` : `Salam E-Kaut (${draft.id})`;
 
     const paymentRequest = await createBillplzBill({
@@ -79,10 +124,12 @@ export async function createContributionBill(req, res) {
       ? `${origin}/thank-you?contributionId=${draft.id}`
       : paymentRequest.paymentUrl;
 
-    return res.json({ success: true, contributionId: draft.id, requestId: paymentRequest.billId, paymentUrl, mode: process.env.BILLPLZ_SANDBOX === "true" ? "sandbox" : "live" });
+const sandboxMode = String(process.env.BILLPLZ_SANDBOX || "").trim().replace(/^["']|["']$/g, "").toLowerCase() === "true";
+    return res.json({ success: true, contributionId: draft.id, requestId: paymentRequest.billId, paymentUrl, mode: sandboxMode ? "sandbox" : "live" });
   } catch (error) {
     console.error("createContributionBill error:", error);
-    return res.status(400).json({ error: error instanceof Error ? error.message : "Unable to create payment request." });
+    const status = error instanceof z.ZodError ? 400 : 500;
+    return res.status(status).json({ error: sanitizeError(error) });
   }
 }
 
@@ -109,7 +156,10 @@ export async function contributionWebhook(req, res) {
 
     const { data: contribution } = await supabase.from("gift_contributions").select("*").eq("id", contributionId).single();
     if (!contribution) return res.status(404).json({ error: "Contribution not found." });
-    if (contribution.billplz_bill_id !== requestId) return res.status(409).json({ error: "Bill reference mismatch." });
+
+    const storedBillId = (contribution.billplz_bill_id || contribution.toyyibpay_bill_code || "").trim();
+    if (!storedBillId) return res.status(400).json({ error: "Contribution has no associated bill reference." });
+    if (storedBillId !== requestId) return res.status(409).json({ error: "Bill reference mismatch." });
 
     const normalizedStatus = gatewayPaid || gatewayState.toLowerCase() === "completed" ? "paid"
       : gatewayState.toLowerCase() === "failed" || gatewayState.toLowerCase() === "deleted" || gatewayState.toLowerCase() === "due" ? "failed"
@@ -137,6 +187,6 @@ export async function contributionWebhook(req, res) {
     return res.json({ success: true });
   } catch (error) {
     console.error("contributionWebhook error:", error);
-    return res.status(500).json({ error: "Webhook processing failed." });
+    return res.status(500).json({ error: sanitizeError(error) });
   }
 }

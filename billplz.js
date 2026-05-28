@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 
-const rawSandbox = process.env.BILLPLZ_SANDBOX?.trim();
-const isSandbox = rawSandbox === "true" || rawSandbox === true || rawSandbox === "'true'" || rawSandbox === '"true"';
+const rawSandbox = String(process.env.BILLPLZ_SANDBOX || "").trim().replace(/^["']|["']$/g, "").toLowerCase();
+const isSandbox = rawSandbox === "true";
 
 const billplzBaseUrl = isSandbox
   ? "https://www.billplz-sandbox.com/api"

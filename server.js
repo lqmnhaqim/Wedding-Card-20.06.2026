@@ -1,10 +1,14 @@
 import "dotenv/config";
 import express from "express";
+import { readFileSync } from "node:fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createClient } from "@supabase/supabase-js";
-import { consumeRateLimit } from "./rate-limit.js";
+import cookieParser from "cookie-parser";
+import { consumeRateLimit, setRateLimitDbClient } from "./rate-limit.js";
 import crypto from "node:crypto";
+import { z } from "zod";
+import registerRsvpRoutes from "./routes/rsvp.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,8 +24,10 @@ const supabase =
     ? createClient(supabaseUrl, supabaseServiceRoleKey, { auth: { persistSession: false } })
     : null;
 
-const rawSandbox = String(process.env.BILLPLZ_SANDBOX || "true").trim();
-const isSandbox = rawSandbox === "true" || rawSandbox == "'true'" || rawSandbox == '"true"';
+if (supabase) setRateLimitDbClient(supabase);
+
+const rawSandbox = String(process.env.BILLPLZ_SANDBOX || "").trim().replace(/^["']|["']$/g, "").toLowerCase();
+const isSandbox = rawSandbox === "true";
 const billplzBaseUrl = isSandbox
   ? "https://www.billplz-sandbox.com/api"
   : "https://www.billplz.com/api";
@@ -43,6 +49,12 @@ async function getProject(projectKey) {
     .single();
   if (error) throw error;
   return data;
+}
+
+// --- HTML Escaping (F7) ---
+function escapeHtml(value) {
+  const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+  return String(value ?? "").replace(/[&<>"']/g, (ch) => map[ch]);
 }
 
 function mapGiftRows(items, contributions) {
@@ -67,10 +79,10 @@ function mapGiftRows(items, contributions) {
     const isFullyFunded = status === "fully_funded" || (targetAmount > 0 && fundedAmount >= targetAmount);
     return {
       id: item.id,
-      title: item.title || "Gift Item",
-      description: item.description || "",
+      title: escapeHtml(item.title || "Gift Item"),
+      description: escapeHtml(item.description || ""),
       imageUrl: item.image_url || "",
-      contributorNames,
+      contributorNames: contributorNames.map(escapeHtml),
       targetAmount,
       fundedAmount,
       status,
@@ -299,22 +311,47 @@ function formatRsvpTelegramMessage(rsvp, totalAttendancePax) {
   ].join("\n");
 }
 
-function formatContributionTelegramMessage(contribution, status, paymentReference) {
+async function formatContributionTelegramMessage(contribution, status, paymentReference) {
   const isPaid = status === "paid";
-  const title = isPaid ? "Contribution Paid" : "Contribution Failed";
   const name = escapeTelegramHtml(contribution?.contributor_name ?? "Guest");
   const amount = escapeTelegramHtml(String(contribution?.amount ?? "-"));
-  const reference = escapeTelegramHtml(contribution?.id ?? "-");
   const orderNo = escapeTelegramHtml(paymentReference || "-");
-  return [
-    `<b>${title}</b>`,
-    "",
-    `• <b>Name:</b> ${name}`,
-    isPaid ? `• <b>Amount:</b> MYR ${amount}` : null,
-    `• <b>Reference:</b> ${reference}`,
-    `• <b>Billplz Order:</b> ${orderNo}`,
-    `• <b>Status:</b> ${isPaid ? "Paid" : "Failed"}`,
-  ].filter(Boolean).join("\n");
+
+  let giftBlock = "";
+  const giftItemId = contribution?.gift_item_id;
+  if (giftItemId && isPaid) {
+    try {
+      const { data: gift } = await supabase.from("gift_items").select("title,target_amount").eq("id", giftItemId).single();
+      if (gift) {
+        const { data: paidRows } = await supabase.from("gift_contributions").select("amount").eq("gift_item_id", giftItemId).in("status", ["paid", "success", "completed"]);
+        const fundedNow = (paidRows || []).reduce((s, r) => s + Number(r.amount || 0), 0);
+        const target = Number(gift.target_amount || 0);
+        const progressPct = target > 0 ? Math.min(Math.round((fundedNow / target) * 10), 10) : 0;
+        const bar = "\u2593".repeat(progressPct) + "\u2591".repeat(10 - progressPct);
+        giftBlock = `\n🎁 <b>Gift</b>: ${escapeTelegramHtml(gift.title)}\n📊 <b>Progress</b>: <code>${bar}</code> RM ${fundedNow} / RM ${target}\n`;
+      }
+    } catch (_) { /* best effort */ }
+  }
+
+  if (isPaid) {
+    return (
+      `✅ <b>Payment Received!</b>\n` +
+      `━━━━━━━━━━━━━━━━\n` +
+      `👤 <b>Name</b>: ${name}\n` +
+      `💵 <b>Amount</b>: RM ${amount}\n` +
+      giftBlock +
+      `🔢 <b>Order</b>: <code>${orderNo}</code>\n` +
+      `━━━━━━━━━━━━━━━━`
+    );
+  }
+  return (
+    `❌ <b>Payment Failed</b>\n` +
+    `━━━━━━━━━━━━━━━━\n` +
+    `👤 <b>Name</b>: ${name}\n` +
+    `💵 <b>Amount</b>: RM ${amount}\n` +
+    `🔢 <b>Order</b>: <code>${orderNo}</code>\n` +
+    `━━━━━━━━━━━━━━━━`
+  );
 }
 
 async function getContributionById(contributionId) {
@@ -409,7 +446,7 @@ async function syncContributionWithBillplz(contributionId) {
     
     await updateContributionStatus(contribution.id, normalizedStatus, billId, paymentReference);
     if (normalizedStatus !== contribution.status && (normalizedStatus === "paid" || normalizedStatus === "failed")) {
-      await sendTelegramNotification(formatContributionTelegramMessage(contribution, normalizedStatus, paymentReference)).catch(() => null);
+      await sendTelegramNotification(await formatContributionTelegramMessage(contribution, normalizedStatus, paymentReference)).catch(() => null);
     }
     const updated = await getContributionById(contribution.id);
     console.log("[sync] After update, status:", updated?.status);
@@ -420,21 +457,260 @@ async function syncContributionWithBillplz(contributionId) {
   }
 }
 
-app.use(express.json({ limit: "1mb" }));
+app.use(cookieParser());
 
-// Enable CORS for all origins (required when frontend and API ports differ)
+app.use((req, res, next) => {
+  if (req.method !== "POST" && req.method !== "PUT" && req.method !== "DELETE") return next();
+  if (req.path === "/api/contributions/webhook") return next();
+  if (req.path.endsWith("/billplz-callback")) return next();
+  return verifyCsrfToken(req, res, next);
+});
+
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: false }));
+
+// Enable CORS for configured origin + localhost fallback
 app.use((_req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
+  const configuredOrigin = String(process.env.APP_BASE_URL || "").trim();
+  const allowedOrigin = configuredOrigin
+    ? configuredOrigin.replace(/\/$/, "")
+    : `${_req.protocol}://${_req.get("host")}`;
+  res.header("Access-Control-Allow-Origin", allowedOrigin);
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type,Authorization,x-csrf-token,x-admin-token");
   if (_req.method === "OPTIONS") return res.sendStatus(200);
   next();
 });
 
 app.set("supabase", supabase);
+app.set("getOrigin", getRequestOrigin);
 
-app.get("/thank-you", (_req, res) => {
-  res.sendFile(path.join(__dirname, "thank-you.html"));
+// --- Error Sanitization (F9) ---
+function sanitizeApiError(error) {
+  if (error instanceof z.ZodError) {
+    const issues = error.issues || error.errors || [];
+    return issues.map(e => `${(e.path || []).join(".")}: ${e.message}`).join("; ");
+  }
+  if (error instanceof Error) {
+    const msg = error.message;
+    if (msg.includes("Please enter") || msg.includes("Sila masukkan") ||
+        msg.includes("Unable to") || msg.includes("Tidak dapat") ||
+        msg.includes("Payment URL") || msg.includes("Pautan pembayaran") ||
+        msg.includes("This gift has") || msg.includes("Hadiah ini") ||
+        msg.includes("required") || msg.includes("must be") ||
+        msg.includes("invalid") || msg.includes("Valid")) {
+      return msg;
+    }
+  }
+  return "An unexpected error occurred. Please try again later.";
+}
+
+// --- Zod Validation Schemas (F8) ---
+
+const rsvpSchema = z.object({
+  fullName: z.string().min(2, "Full name is required (minimum 2 characters)."),
+  attendance: z.enum(["attending", "not_attending"], { errorMap: () => ({ message: "Attendance must be 'attending' or 'not_attending'." }) }),
+  pax: z.number().int().min(1).max(8).optional(),
+  phoneNumber: z.string().optional(),
+  message: z.string().optional(),
+});
+
+const contributionSchema = z.object({
+  contributorName: z.string().min(2, "Name must be at least 2 characters."),
+  message: z.string().optional().default(""),
+  amount: z.number().min(1, "Amount must be at least RM 1.").max(100000, "Amount cannot exceed RM 100,000."),
+  email: z.string().optional().default(""),
+  phoneNumber: z.string().min(6, "Valid phone number required."),
+  giftItemId: z.string().optional(),
+});
+
+const checkoutSchema = z.object({
+  contributorName: z.string().min(2, "Contributor name is required."),
+  phoneNumber: z.string().min(8, "Phone number is required (minimum 8 characters)."),
+  message: z.string().optional().default(""),
+  amount: z.number().min(1, "Amount must be more than zero.").max(100000, "Amount cannot exceed RM 100,000."),
+  giftItemId: z.string().optional(),
+});
+
+const settingsSchema = z.object({
+  settings: z.record(z.unknown()),
+  is_published: z.boolean().optional(),
+});
+
+const giftItemsSchema = z.object({
+  source: z.string().optional(),
+  items: z.array(z.object({
+    id: z.string().optional(),
+    title: z.string().min(1),
+    description: z.string().optional(),
+    imageUrl: z.string().optional(),
+    productUrl: z.string().optional(),
+    targetAmount: z.number().optional(),
+    fundedAmount: z.number().optional(),
+    status: z.string().optional(),
+  })),
+});
+
+// --- Security Headers ---
+app.use((_req, res, next) => {
+  res.setHeader("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("X-XSS-Protection", "1; mode=block");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  next();
+});
+
+// --- Admin Authentication Middleware ---
+
+function decodeBasicAuth(header) {
+  if (!header || !header.startsWith("Basic ")) return null;
+  try {
+    const encoded = header.slice("Basic ".length).trim();
+    const decoded = Buffer.from(encoded, "base64").toString("utf8");
+    const sep = decoded.indexOf(":");
+    if (sep < 0) return null;
+    return { username: decoded.slice(0, sep), password: decoded.slice(sep + 1) };
+  } catch {
+    return null;
+  }
+}
+
+function safeEqual(a, b) {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+function hasWeakCredentials(username, password) {
+  const KNOWN_WEAK = new Set(["admin:admin", "admin:password", "root:root"]);
+  const pair = `${username.trim().toLowerCase()}:${password.trim().toLowerCase()}`;
+  if (KNOWN_WEAK.has(pair)) return true;
+  return username.trim().toLowerCase() === password.trim().toLowerCase();
+}
+
+function basicAuthRequired(req, res, next) {
+  const username = String(process.env.ADMIN_USERNAME || "").trim();
+  const password = String(process.env.ADMIN_PASSWORD || "").trim();
+
+  if (!username || !password) {
+    if (process.env.NODE_ENV !== "production") return next();
+    return res.status(503).json({ error: "Admin authentication is not configured." });
+  }
+
+  if (process.env.NODE_ENV === "production" && hasWeakCredentials(username, password)) {
+    return res.status(503).json({ error: "Admin authentication must use stronger credentials." });
+  }
+
+  const auth = decodeBasicAuth(req.headers.authorization || "");
+  if (!auth) {
+    res.setHeader("WWW-Authenticate", 'Basic realm="Wedding Admin", charset="UTF-8"');
+    return res.status(401).json({ error: "Authentication required." });
+  }
+
+  if (!safeEqual(auth.username, username) || !safeEqual(auth.password, password)) {
+    res.setHeader("WWW-Authenticate", 'Basic realm="Wedding Admin", charset="UTF-8"');
+    return res.status(401).json({ error: "Authentication required." });
+  }
+
+  next();
+}
+
+// --- CSRF Protection (HMAC-SHA256 signed tokens, ported from E-Card 2nd Batch) ---
+
+function getCsrfSecret() {
+  const secret = String(process.env.CSRF_SECRET || "").trim();
+  if (secret) return secret;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("CSRF_SECRET must be configured in production.");
+  }
+  return "development-only-csrf-secret-do-not-use-in-production";
+}
+
+function csrfHmac(value) {
+  return crypto.createHmac("sha256", getCsrfSecret()).update(value).digest("hex");
+}
+
+function generateCsrfToken() {
+  const raw = crypto.randomBytes(32).toString("hex");
+  return `${raw}:${csrfHmac(raw)}`;
+}
+
+function validateCsrfTokenFormat(token) {
+  const sep = token.indexOf(":");
+  if (sep === -1) return false;
+  const raw = token.slice(0, sep);
+  const sig = token.slice(sep + 1);
+  return csrfHmac(raw) === sig;
+}
+
+function getCsrfCookieName() {
+  return "wc_csrf_token";
+}
+
+function verifyCsrfToken(req, res, next) {
+  const headerToken = String(req.headers["x-csrf-token"] || "").trim();
+  if (!headerToken) return res.status(403).json({ error: "Missing CSRF token header." });
+
+  const cookieToken = String(req.cookies?.[getCsrfCookieName()] || "").trim();
+  if (!cookieToken) return res.status(403).json({ error: "Missing CSRF cookie." });
+
+  if (headerToken !== cookieToken) return res.status(403).json({ error: "CSRF token mismatch." });
+
+  if (!validateCsrfTokenFormat(headerToken)) return res.status(403).json({ error: "Invalid CSRF token format." });
+
+  next();
+}
+
+function attachCsrfCookie(req, res, next) {
+  const existingToken = req.cookies?.[getCsrfCookieName()];
+  const token = existingToken && validateCsrfTokenFormat(existingToken) ? existingToken : generateCsrfToken();
+  res.cookie(getCsrfCookieName(), token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/",
+    maxAge: 1000 * 60 * 60 * 24,
+  });
+  res.setHeader("X-CSRF-Token", token);
+  next();
+}
+
+function sameOrigin(left, right) {
+  try { return new URL(left).origin === new URL(right).origin; }
+  catch { return false; }
+}
+
+function ensureTrustedWriteOrigin(req, res, next) {
+  if (req.method !== "POST" && req.method !== "PUT" && req.method !== "DELETE") return next();
+
+  const requestOrigin = `${req.protocol}://${req.get("host")}`;
+  const origin = req.get("origin");
+  if (origin && !sameOrigin(origin, requestOrigin)) {
+    return res.status(403).json({ error: "Blocked cross-site request." });
+  }
+  const referer = req.get("referer");
+  if (referer && !sameOrigin(referer, requestOrigin)) {
+    return res.status(403).json({ error: "Blocked cross-site request." });
+  }
+  next();
+}
+
+function sendHtmlWithCsrf(res, filePath, csrfToken) {
+  const html = readFileSync(filePath, "utf8").replace(
+    '<meta name="csrf-token" content=""',
+    `<meta name="csrf-token" content="${csrfToken}"`
+  );
+  res.type("html").send(html);
+}
+
+app.get("/", attachCsrfCookie, (req, res) => {
+  sendHtmlWithCsrf(res, path.join(__dirname, "index.html"), req.cookies?.[getCsrfCookieName()] || generateCsrfToken());
+});
+
+app.get("/thank-you", attachCsrfCookie, (req, res) => {
+  sendHtmlWithCsrf(res, path.join(__dirname, "thank-you.html"), req.cookies?.[getCsrfCookieName()] || generateCsrfToken());
 });
 
 app.post("/api/contributions/create-bill", async (req, res) => {
@@ -442,53 +718,60 @@ app.post("/api/contributions/create-bill", async (req, res) => {
   return createContributionBill(req, res);
 });
 
-app.post("/api/contributions/webhook", express.text({ type: "*/*" }), async (req, res) => {
-  req.rawBody = req.body || "";
+app.post("/api/contributions/webhook", express.urlencoded({ extended: false, type: "*/*" }), async (req, res) => {
+  req.rawBody = Object.entries(req.body || {}).map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`).join("&");
   const { contributionWebhook } = await import("./contribution-api.js");
   return contributionWebhook(req, res);
 });
 
-app.get("/admin", (_req, res) => {
-  res.sendFile(path.join(__dirname, "admin.html"));
+app.get("/admin", basicAuthRequired, attachCsrfCookie, (req, res) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+  sendHtmlWithCsrf(res, path.join(__dirname, "admin.html"), req.cookies?.[getCsrfCookieName()] || generateCsrfToken());
+});
+
+function verifyAdminToken(req, res, next) {
+  const token = String(req.headers["x-admin-token"] || "").trim();
+  if (!token) return res.status(401).json({ error: "Missing admin token." });
+  const session = req.cookies?.["admin_session"];
+  if (!session || token !== session) return res.status(401).json({ error: "Invalid admin token." });
+  next();
+}
+
+app.get("/api/admin/token", (_req, res) => {
+  const token = crypto.randomBytes(16).toString("hex");
+  res.cookie("admin_session", token, {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/api/admin",
+    maxAge: 1000 * 60 * 60 * 8,
+  });
+  res.json({ token });
 });
 
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, db: Boolean(supabase) });
 });
 
+registerRsvpRoutes(app);
+
 app.post("/api/contributions/:projectKey/checkout", async (req, res) => {
   try {
     if (!requireDb(res)) return;
     const project = await getProject(req.params.projectKey);
-    const {
-      contributorName,
-      phoneNumber,
-      message,
-      amount,
-      giftItemId,
-    } = req.body || {};
+    const parsed = checkoutSchema.parse(req.body || {});
 
-    const cleanedName = String(contributorName || "").trim();
-    const cleanedPhone = String(phoneNumber || "").trim();
-    const billplzMobile = normalizeBillplzMobile(cleanedPhone);
-    const cleanedMessage = String(message || "").trim();
-    const numericAmount = Number(amount || 0);
-
-    if (!cleanedName) return res.status(400).json({ error: "Contributor name is required." });
-    if (!cleanedPhone) return res.status(400).json({ error: "Phone number is required." });
+    const billplzMobile = normalizeBillplzMobile(parsed.phoneNumber.trim());
     if (billplzMobile.length < 10 || billplzMobile.length > 13) {
       return res.status(400).json({ error: "Phone number format is invalid. Use Malaysian mobile format like 0123456789." });
     }
-    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
-      return res.status(400).json({ error: "Amount must be more than zero." });
-    }
 
     const insertPayload = {
-      contributor_name: cleanedName,
-      message: cleanedMessage,
-      amount: numericAmount,
+      contributor_name: parsed.contributorName.trim(),
+      message: (parsed.message || "").trim(),
+      amount: parsed.amount,
       status: "pending",
-      gift_item_id: giftItemId || null,
+      gift_item_id: parsed.giftItemId || null,
       contributor_email: "",
     };
 
@@ -538,7 +821,8 @@ app.post("/api/contributions/:projectKey/checkout", async (req, res) => {
       mock: Boolean(bill.isMock),
     });
   } catch (error) {
-    res.status(500).json({ error: error instanceof Error ? error.message : "Unable to create payment checkout." });
+    const status = error instanceof z.ZodError ? 400 : 500;
+    res.status(status).json({ error: sanitizeApiError(error) });
   }
 });
 
@@ -565,8 +849,10 @@ app.post("/api/contributions/:projectKey/billplz-callback", express.urlencoded({
     const current = await getContributionById(contributionId);
     console.log("[billplz-callback] Contribution lookup result:", current ? "found" : "not found");
     if (!current) return res.status(404).send("Contribution not found.");
-    const currentBillId = current.billplz_bill_id || current.toyyibpay_bill_code;
-    if (currentBillId && billId && currentBillId !== billId) return res.status(409).send("Bill reference mismatch.");
+    const currentBillId = (current.billplz_bill_id || current.toyyibpay_bill_code || "").trim();
+    if (!currentBillId) return res.status(400).send("Contribution has no associated bill reference.");
+    if (!billId) return res.status(400).send("Missing bill ID in callback.");
+    if (currentBillId !== billId) return res.status(409).send("Bill reference mismatch.");
     const resolvedReference = await resolveBillplzTransactionReference(
       billId || currentBillId || "",
       txId,
@@ -574,7 +860,7 @@ app.post("/api/contributions/:projectKey/billplz-callback", express.urlencoded({
     );
     await updateContributionStatus(contributionId, normalizedStatus, billId || currentBillId || "", resolvedReference);
     if (normalizedStatus !== current.status && (normalizedStatus === "paid" || normalizedStatus === "failed")) {
-      await sendTelegramNotification(formatContributionTelegramMessage(current, normalizedStatus, resolvedReference)).catch(() => null);
+      await sendTelegramNotification(await formatContributionTelegramMessage(current, normalizedStatus, resolvedReference)).catch(() => null);
     }
 
     res.status(200).send("OK");
@@ -603,28 +889,6 @@ app.get("/api/contributions/status/:id", async (req, res) => {
 });
 
 // Debug endpoint: test Supabase query directly
-app.get("/api/debug/contribution/:id", async (req, res) => {
-  try {
-    console.log("[debug] Request for ID:", req.params.id);
-    if (!supabase) return res.status(500).json({ error: "Supabase not initialized" });
-    const id = String(req.params.id || "").trim();
-    const { data, error } = await supabase
-      .from("gift_contributions")
-      .select("*")
-      .eq("id", id)
-      .single();
-    if (error) {
-      console.error("[debug] Supabase error:", JSON.stringify(error));
-      return res.status(404).json({ error: error.message, details: error });
-    }
-    console.log("[debug] Found:", JSON.stringify(data));
-    res.json(data);
-  } catch (error) {
-    console.error("[debug] Error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
 app.get("/contribution/thank-you", async (req, res) => {
   try {
     if (!requireDb(res)) {
@@ -725,8 +989,8 @@ app.get("/contribution/thank-you", async (req, res) => {
     <h1 id="headline">${title}</h1>
     <p id="message">${body}</p>
     <div id="meta" class="meta${contributionId ? "" : " hidden"}">
-      ${contribution ? `<p>Contribution reference: <strong>${contribution.id}</strong></p>` : ""}
-      ${contribution?.payment_reference ? `<p>Payment reference: <strong>${contribution.payment_reference}</strong></p>` : ""}
+      ${contribution ? `<p>Contribution reference: <strong>${escapeHtml(contribution.id)}</strong></p>` : ""}
+      ${contribution?.payment_reference ? `<p>Payment reference: <strong>${escapeHtml(contribution.payment_reference)}</strong></p>` : ""}
     </div>
     <a class="button" href="/">Return to invitation</a>
   </main>
@@ -775,50 +1039,6 @@ app.get("/contribution/thank-you", async (req, res) => {
   }
 });
 
-app.post('/api/rsvp/:projectKey', async (req, res) => {
-  try {
-    if (!requireDb(res)) return;
-    const { fullName, attendance, pax, phoneNumber, message } = req.body || {};
-    if (!fullName || !attendance) {
-      return res.status(400).json({ error: 'Full name and attendance are required.' });
-    }
-    const isAttending = attendance === 'attending';
-    const project = await getProject(req.params.projectKey);
-    const payload = {
-      project_id: project.id,
-      full_name: String(fullName || '').trim(),
-      attendance: String(attendance || '').trim(),
-      pax: isAttending ? Math.min(Math.max(Number(pax || 1), 1), 8) : null,
-      wish_message: typeof message === 'string' ? message.trim() : (typeof phoneNumber === 'string' ? phoneNumber.trim() : ''),
-    };
-
-    console.log('RSVP: Inserting payload:', JSON.stringify(payload, null, 2));
-    const { data: inserted, error: insertErr } = await supabase.from('wc_rsvps').insert(payload).select();
-    if (insertErr) {
-      console.error('RSVP: Supabase insert error:', insertErr);
-      throw insertErr;
-    }
-    console.log('RSVP: Successfully inserted:', JSON.stringify(inserted, null, 2));
-    const saved = inserted?.[0] || payload;
-    let totalAttendancePax = 0;
-    try {
-      const { data: attendingRows, error: attendingErr } = await supabase
-        .from("wc_rsvps")
-        .select("pax")
-        .eq("project_id", project.id)
-        .eq("attendance", "attending");
-      if (!attendingErr && Array.isArray(attendingRows)) {
-        totalAttendancePax = attendingRows.reduce((sum, row) => sum + Number(row?.pax || 0), 0);
-      }
-    } catch (_) {}
-    await sendTelegramNotification(formatRsvpTelegramMessage(saved, totalAttendancePax)).catch(() => null);
-    res.json({ ok: true, data: inserted });
-  } catch (error) {
-    console.error('RSVP: Unhandled error:', error);
-    res.status(500).json({ error: error instanceof Error ? error.message : 'Unable to submit RSVP.' });
-  }
-});
-
 app.get("/api/settings/:projectKey", async (req, res) => {
   try {
     if (!requireDb(res)) return;
@@ -835,14 +1055,15 @@ app.get("/api/settings/:projectKey", async (req, res) => {
   }
 });
 
-app.put("/api/settings/:projectKey", async (req, res) => {
+app.put("/api/settings/:projectKey", verifyAdminToken, verifyCsrfToken, async (req, res) => {
   try {
     if (!requireDb(res)) return;
     const project = await getProject(req.params.projectKey);
+    const parsed = settingsSchema.parse(req.body || {});
     const payload = {
       project_id: project.id,
-      settings: req.body?.settings || {},
-      is_published: typeof req.body?.is_published === "boolean" ? req.body.is_published : true
+      settings: parsed.settings || {},
+      is_published: parsed.is_published !== false
     };
     const { error } = await supabase
       .from("wc_site_settings")
@@ -850,7 +1071,8 @@ app.put("/api/settings/:projectKey", async (req, res) => {
     if (error) throw error;
     res.json({ ok: true });
   } catch (error) {
-    res.status(500).json({ error: error instanceof Error ? error.message : "Unable to save settings." });
+    const status = error instanceof z.ZodError ? 400 : 500;
+    res.status(status).json({ error: sanitizeApiError(error) });
   }
 });
 
@@ -881,34 +1103,7 @@ app.get("/api/gift-list/:projectKey", async (req, res) => {
   }
 });
 
-app.get("/api/rsvp-wishes/:projectKey", async (req, res) => {
-  try {
-    if (!requireDb(res)) return;
-    const project = await getProject(req.params.projectKey);
-    const { data, error } = await supabase
-      .from("wc_rsvps")
-      .select("full_name,wish_message,created_at")
-      .eq("project_id", project.id)
-      .not("wish_message", "is", null)
-      .order("created_at", { ascending: false })
-      .limit(30);
-    if (error) throw error;
-
-    const wishes = (data || [])
-      .map((row) => ({
-        name: String(row.full_name || "").trim(),
-        message: String(row.wish_message || "").trim(),
-        created_at: row.created_at || null
-      }))
-      .filter((row) => row.name && row.message);
-
-    res.json({ wishes });
-  } catch (error) {
-    res.status(500).json({ error: error instanceof Error ? error.message : "Unable to fetch RSVP wishes." });
-  }
-});
-
-app.get("/api/admin/gift-items/:projectKey", async (req, res) => {
+app.get("/api/admin/gift-items/:projectKey", verifyAdminToken, async (req, res) => {
   try {
     if (!requireDb(res)) return;
 
@@ -932,12 +1127,11 @@ app.get("/api/admin/gift-items/:projectKey", async (req, res) => {
   }
 });
 
-app.put("/api/admin/gift-items/:projectKey", async (req, res) => {
+app.put("/api/admin/gift-items/:projectKey", verifyAdminToken, verifyCsrfToken, async (req, res) => {
   try {
     if (!requireDb(res)) return;
-    const items = Array.isArray(req.body?.items) ? req.body.items : [];
-    // Keep writes aligned with E-Card 2nd Batch: write to gift_items only.
-    const payload = items
+    const parsed = giftItemsSchema.parse(req.body || {});
+    const payload = parsed.items
       .map((item) => ({
         id: item.id || undefined,
         title: String(item.title || "").trim(),
@@ -945,7 +1139,6 @@ app.put("/api/admin/gift-items/:projectKey", async (req, res) => {
         image_url: String(item.imageUrl || "").trim(),
         product_url: String(item.productUrl || "").trim(),
         target_amount: Number(item.targetAmount || 0),
-        funded_amount: Number(item.fundedAmount || 0),
         status: String(item.status || "available").trim() || "available"
       }))
       .filter((item) => item.title);
@@ -956,7 +1149,8 @@ app.put("/api/admin/gift-items/:projectKey", async (req, res) => {
     }
     res.json({ ok: true, source: "gift_items" });
   } catch (error) {
-    res.status(500).json({ error: error instanceof Error ? error.message : "Unable to save admin gift items." });
+    const status = error instanceof z.ZodError ? 400 : 500;
+    res.status(status).json({ error: sanitizeApiError(error) });
   }
 });
 
