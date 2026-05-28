@@ -12,7 +12,7 @@ function escapeTelegramHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (ch) => map[ch]);
 }
 
-async function sendTelegramNotification(message) {
+export async function sendTelegramNotification(message) {
   const enabled = process.env.TELEGRAM_ENABLED !== "false";
   console.log("[Telegram] enabled:", enabled);
   if (!enabled) return;
@@ -30,7 +30,7 @@ async function sendTelegramNotification(message) {
   if (!res.ok) console.error("Telegram send failed:", tgBody);
 }
 
-async function formatContributionTelegramMessage(contribution, status, paymentReference, supabase) {
+export async function formatContributionTelegramMessage(contribution, status, paymentReference, supabase) {
   const isPaid = status === "paid";
   const name = escapeTelegramHtml(contribution?.contributor_name ?? "Guest");
   const amount = escapeTelegramHtml(String(contribution?.amount ?? "-"));

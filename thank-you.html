@@ -90,9 +90,14 @@
         return false;
       }
 
-      // Billplz redirect confirmed payment immediately
+      // Billplz redirect confirmed payment — sync & show immediately
       if (billplzPaid === "true" && billplzId) {
         showPaid(billplzId);
+        fetch("/api/contributions/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contributionId: contributionId, billplzId: billplzId, billplzPaid: "true" }),
+        }).catch(function() {});
       } else if (initialStatus === "completed" || initialStatus === "paid" || initialStatus === "success") {
         showState("paid");
       } else if (initialStatus === "failed" || initialStatus === "cancelled") {
