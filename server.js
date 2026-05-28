@@ -11,6 +11,7 @@ import registerRsvpRoutes from "./routes/rsvp.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const rootDir = process.env.VERCEL_ENV ? process.cwd() : __dirname;
 
 const app = express();
 const PORT = Number(process.env.PORT || 8787);
@@ -697,11 +698,11 @@ function ensureTrustedWriteOrigin(req, res, next) {
 }
 
 app.get("/", attachCsrfCookie, (_req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
+  res.sendFile(path.join(rootDir, "index.html"));
 });
 
 app.get("/thank-you", attachCsrfCookie, (_req, res) => {
-  res.sendFile(path.join(__dirname, "thank-you.html"));
+  res.sendFile(path.join(rootDir, "thank-you.html"));
 });
 
 app.post("/api/contributions/create-bill", async (req, res) => {
@@ -717,7 +718,7 @@ app.post("/api/contributions/webhook", express.urlencoded({ extended: false, typ
 
 app.get("/admin", basicAuthRequired, attachCsrfCookie, (_req, res) => {
   res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
-  res.sendFile(path.join(__dirname, "admin.html"));
+  res.sendFile(path.join(rootDir, "admin.html"));
 });
 
 function verifyAdminToken(req, res, next) {
@@ -883,7 +884,7 @@ app.get("/api/contributions/status/:id", async (req, res) => {
 app.get("/contribution/thank-you", async (req, res) => {
   try {
     if (!requireDb(res)) {
-      return res.sendFile(path.join(__dirname, "thank-you.html"));
+      return res.sendFile(path.join(rootDir, "thank-you.html"));
     }
     const contributionId = String(req.query?.contributionId || req.query?.refno || "").trim();
     let contribution = contributionId ? await syncContributionWithBillplz(contributionId) : null;
