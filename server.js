@@ -73,7 +73,10 @@ function mapGiftRows(items, contributions) {
       .slice(0, 5);
     const targetAmount = Number(item.target_amount || 0);
     const dbFundedAmount = Number(item.funded_amount || 0);
-    const paidFromContrib = rows.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+    const paidFromContrib = rows.filter(r => {
+      const s = (r.status || "").toLowerCase();
+      return s === "paid" || s === "success" || s === "completed";
+    }).reduce((sum, r) => sum + Number(r.amount || 0), 0);
     const fundedAmount = dbFundedAmount > 0 ? dbFundedAmount : paidFromContrib;
     const status = (item.status || "").toLowerCase();
     const isFullyFunded = status === "fully_funded" || (targetAmount > 0 && fundedAmount >= targetAmount);
@@ -103,7 +106,10 @@ function mapAdminGiftItems(items, contributions) {
     const rows = byGift.get(item.id) || [];
     const targetAmount = Number(item.target_amount || 0);
     const dbFundedAmount = Number(item.funded_amount || 0);
-    const paidFromContrib = rows.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+    const paidFromContrib = rows.filter(r => {
+      const s = (r.status || "").toLowerCase();
+      return s === "paid" || s === "success" || s === "completed";
+    }).reduce((sum, r) => sum + Number(r.amount || 0), 0);
     const fundedAmount = dbFundedAmount > 0 ? dbFundedAmount : paidFromContrib;
     return {
       id: item.id,

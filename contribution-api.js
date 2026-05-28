@@ -175,6 +175,9 @@ export async function createContributionBill(req, res) {
       callbackUrl: `${origin}/api/contributions/webhook?contributionId=${draft.id}`,
     });
 
+    console.log("[createBill] Origin:", origin);
+    console.log("[createBill] Callback URL:", `${origin}/api/contributions/webhook?contributionId=xxx`);
+
     const { error: updateErr } = await supabase
       .from("gift_contributions")
       .update({ billplz_bill_id: paymentRequest.billId, status: "pending" })
