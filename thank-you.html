@@ -93,7 +93,7 @@
       // Billplz redirect confirmed payment — sync & show immediately
       if (billplzPaid === "true" && billplzId) {
         showPaid(billplzId);
-        fetch("/api/contributions/sync", {
+        fetch("/api/contribution-sync", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ contributionId: contributionId, billplzId: billplzId, billplzPaid: "true" }),

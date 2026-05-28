@@ -753,7 +753,7 @@ app.get("/api/health", (_req, res) => {
 
 registerRsvpRoutes(app);
 
-app.post("/api/contributions/sync", async (req, res) => {
+app.post("/api/contribution-sync", async (req, res) => {
   try {
     if (!requireDb(res)) return;
     const { contributionId, billplzId, billplzPaid } = req.body || {};
