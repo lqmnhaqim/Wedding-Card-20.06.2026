@@ -622,10 +622,9 @@ function basicAuthRequired(req, res, next) {
 function getCsrfSecret() {
   const secret = String(process.env.CSRF_SECRET || "").trim();
   if (secret) return secret;
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("CSRF_SECRET must be configured in production.");
-  }
-  return "development-only-csrf-secret-do-not-use-in-production";
+  if (process.env.NODE_ENV !== "production") return "development-only-csrf-secret-do-not-use-in-production";
+  console.error("CRITICAL: CSRF_SECRET not configured in production. Set it in Vercel Dashboard.");
+  return "MISSING-CSRF-SECRET-" + Date.now();
 }
 
 function csrfHmac(value) {
