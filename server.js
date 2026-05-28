@@ -878,6 +878,7 @@ app.get("/api/contributions/status/:id", async (req, res) => {
       id: result.id,
       status: result.status,
       paymentReference: result.payment_reference || null,
+      billplzOrderNo: result.billplz_bill_id || null,
     });
   } catch (error) {
     console.error("[status] Error:", error);

@@ -40,10 +40,13 @@
   </style>
 </head>
 <body>
-  <main class="card">
+    <main class="card">
     <h1 id="headline">Your contribution is being confirmed</h1>
     <p id="message">We are waiting for the payment gateway to finalize your contribution. Please wait a moment.</p>
-    <div id="meta" class="meta hidden"></div>
+    <div id="meta" class="meta hidden">
+      <p>Contribution reference: <strong id="contribRef">-</strong></p>
+      <p id="orderRefLine" style="display:none">Billplz order number: <strong id="orderRef">-</strong></p>
+    </div>
     <a class="button" href="/">Return to invitation</a>
   </main>
 
@@ -51,17 +54,23 @@
     (function() {
       var params = new URLSearchParams(window.location.search);
       var contributionId = params.get("contributionId") || params.get("refno") || "";
-      var status = params.get("status") || "";
-      var ref = params.get("reference") || "";
-      var billId = params.get("billplz[id]") || "";
+      var initialStatus = params.get("status") || "";
       var headline = document.getElementById("headline");
       var message = document.getElementById("message");
       var meta = document.getElementById("meta");
+      var contribRef = document.getElementById("contribRef");
+      var orderRefLine = document.getElementById("orderRefLine");
+      var orderRef = document.getElementById("orderRef");
+
+      if (contributionId) {
+        meta.classList.remove("hidden");
+        contribRef.textContent = contributionId;
+      }
 
       function showState(finalStatus) {
         if (finalStatus === "paid") {
-          headline.textContent = "Thank you for your generous gift";
-          message.textContent = "Your contribution has been confirmed and will appear in our records.";
+          headline.textContent = "Blessing Fund";
+          message.innerHTML = "Thank you for your generous gift<br><small style='color:#888'>Your contribution has been confirmed by our system and will appear in the admin dashboard.</small>";
         } else if (finalStatus === "failed") {
           headline.textContent = "Payment was not completed";
           message.textContent = "This payment was canceled or did not complete. You may return to the invitation and try again.";
@@ -73,18 +82,14 @@
         return true;
       }
 
-      if (contributionId) {
-        meta.classList.remove("hidden");
-        meta.innerHTML = '<p>Contribution reference: <strong>' + contributionId + '</strong></p>' + (ref ? '<p>Payment reference: <strong>' + ref + '</strong></p>' : '');
-      }
-
-      if (status === "completed" || status === "paid" || status === "success") {
+      if (initialStatus === "completed" || initialStatus === "paid" || initialStatus === "success") {
         showState("paid");
-      } else if (status === "failed" || status === "cancelled") {
+      } else if (initialStatus === "failed" || initialStatus === "cancelled") {
         showState("failed");
       } else {
         var attempts = 0;
-        var maxAttempts = 8;
+        var maxAttempts = 15;
+        var billIdShown = false;
         function pollStatus() {
           if (!contributionId) return;
           attempts += 1;
@@ -94,10 +99,10 @@
               if (!data) return;
               if (data.status === "paid" || data.status === "failed") {
                 showState(data.status);
-                if (data.paymentReference && !ref) {
-                  ref = data.paymentReference;
-                  meta.classList.remove("hidden");
-                  meta.innerHTML = '<p>Contribution reference: <strong>' + contributionId + '</strong></p><p>Payment reference: <strong>' + ref + '</strong></p>';
+                if (data.billplzOrderNo && !billIdShown) {
+                  billIdShown = true;
+                  orderRef.textContent = data.billplzOrderNo;
+                  orderRefLine.style.display = "";
                 }
                 return;
               }
